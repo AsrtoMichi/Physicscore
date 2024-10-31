@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-# Mathscore
+# Physicscore
 This app is aimed at counting points in math competitions.
 The app consists of two windows: one for viewing the scores, one for entering answers and jolly (only one for team).
 It also saves all anser and jolly in a .txt file, to make grafic.
@@ -11,12 +11,11 @@ It also saves all anser and jolly in a .txt file, to make grafic.
 
 __author__ = "Michele Gallo", "https://github.com/AsrtoMichi"
 __version__ = "1.0.0.0"
-__suorce_code__ = "https://github.com/AsrtoMichi/MathScore"
-__license__ = "https://raw.githubusercontent.com/AsrtoMichi/MathScore/main/LICENSE"
+__suorce_code__ = "https://github.com/AsrtoMichi/Physicscore"
+__license__ = "https://raw.githubusercontent.com/AsrtoMichi/Physicscore/main/LICENSE"
 
 __credits__ = """
-Sandro Campigotto, the creator of  PHI Quadro
-Alessandro Chiozza, Federico Micelli and Giorgio Sorgente and Gabriele Triso for technical help
+Alessandro Chiozza, Federico Micelli, Giorgio Sorgente and Gabriele Triso for technical help
 """
 
 # GUI
@@ -34,7 +33,7 @@ from sys import exit as sys_exit
 # .ini reading
 from configparser import ConfigParser, ParsingError
 from ast import literal_eval
-from os.path import join, dirname, abspath
+from os.path import join, dirname
 from os import access, stat
 from typing import NoReturn
 
@@ -63,74 +62,6 @@ class Recorder:
         Record an answer
         """
         self._answer[name_team].append((time, question, answer))
-
-
-class StringVar(Variable):
-    """Value holder for strings variables."""
-
-    def __init__(self, master: Tk):
-        """Construct a string variable.
-
-        MASTER can be given as master widget.
-        VALUE is an optional value (defaults to "")
-        NAME is an optional Tcl name (defaults to PY_VARnum).
-
-        If NAME matches an existing variable and VALUE is omitted
-        then the existing value is retained.
-        """
-        Variable.__init__(self, master)
-
-    def set(self, value=""):
-        """Set the variable to VALUE."""
-        self._tk.globalsetvar(self._name, value)
-
-
-class IntVar(StringVar):
-    """Value holder for integer variables."""
-
-    def __init__(self, master: Tk):
-        """Construct an integer variable.
-
-        MASTER can be given as master widget.
-        VALUE is an optional value (defaults to 0)
-        NAME is an optional Tcl name (defaults to PY_VARnum).
-
-        If NAME matches an existing variable and VALUE is omitted
-        then the existing value is retained.
-        """
-        StringVar.__init__(self, master)
-
-    def get(self) -> int:
-        """Return the value of the variable as an integer."""
-        value = self._tk.globalgetvar(self._name)
-        try:
-            return int(value)
-        except ValueError:
-            return 0
-
-
-class DoubleVar(StringVar):
-    """Value holder for float variables."""
-
-    def __init__(self, master):
-        """Construct a float variable.
-
-        MASTER can be given as master widget.
-        VALUE is an optional value (defaults to 0.0)
-        NAME is an optional Tcl name (defaults to PY_VARnum).
-
-        If NAME matches an existing variable and VALUE is omitted
-        then the existing value is retained.
-        """
-        StringVar.__init__(self, master)
-
-    def get(self) -> float:
-        """Return the value of the variable as an integer."""
-        value = self._tk.globalgetvar(self._name)
-        try:
-            return float(value)
-        except ValueError:
-            return
 
 
 class Main(Tk, Recorder):
@@ -186,16 +117,14 @@ class Main(Tk, Recorder):
         self.protocol('WM_DELETE_WINDOW', lambda: self.exit_confirm(3))
 
         try:
-            self.iconbitmap(default=abspath(
-                join(dirname(__file__), 'MathScore.ico')))
+            self.iconbitmap(default=join(dirname(__file__), 'MathScore.ico'))
         except TclError:
             pass
 
         Label(self, text='Copyright (C) 2024 AstroMichi').pack(
             side='bottom', anchor="e", padx=8, pady=8)
 
-        ini_file_path = abspath(
-            join(dirname(__file__), 'Physicscore.ini'))
+        ini_file_path = join(dirname(__file__), 'Physicscore.ini')
         # serch the ini file in the same directory
 
         # ---------------- 1. Individation config.ini ---------------- #
@@ -207,7 +136,7 @@ class Main(Tk, Recorder):
 
             # if ther isn't the ini file in the same path ask to the user to select the file
             ini_file_path = askopenfilename(
-                parent=self,
+                master=self,
                 title='Select the .ini file',
                 filetypes=[('Initiation File Format', '*.ini')])
 
@@ -229,10 +158,8 @@ class Main(Tk, Recorder):
             self.NAMES_TEAMS = tuple(config['Generic']['teams'].split(', '))
             self._NUMBER_OF_TEAMS = len(self.NAMES_TEAMS)
 
-            self._timer_seconds = int(
-                config['Timer']['time'])*60
-
-            self._TIME_FOR_JOLLY = int(config['Timer']['time_for_jolly'])*60
+            self._timer_seconds, self._TIME_FOR_JOLLY = int(
+                config['Timer']['time'])*60, int(config['Timer']['time_for_jolly'])*60
 
             # 0: m
             # 1: er
@@ -247,17 +174,14 @@ class Main(Tk, Recorder):
                     raise ValueError
 
             self.questions_data = [
-                0] + [(question[0], question[1]/100) for question in questions_data]
+                0] + [[question[0], question[1]/100] for question in questions_data]
 
             self.NUMBER_OF_QUESTIONS = len(questions_data)
-
-            self.E = int(config['Points']['E'])
-            self.A = int(config['Points']['A'])
-            self.Bp = int(config['Points']['Bp'])
-            self.h = int(config['Points']['h'])
-
             self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
                 1, self.NUMBER_OF_QUESTIONS + 1)
+
+            self.E, self.A,  self.Bp, self.h = int(config['Points']['E']), int(
+                config['Points']['A']), int(config['Points']['Bp']), int(config['Points']['h'])
 
             # 0: errors
             # 1: status
@@ -389,7 +313,7 @@ class Main(Tk, Recorder):
         self.arbiterGUI.bind(
             '<Return>', lambda key: self.arbiterGUI.submit_answer())
         self.arbiterGUI.bind(
-            '<Shift-Return>', lambda key: self.arbiterGUI.submit_answer())
+            '<Shift-Return>', lambda key: self.arbiterGUI.submit_jolly())
 
         # -------------- Repetitive functions -------------- #
 
@@ -435,7 +359,7 @@ class Main(Tk, Recorder):
         data = f"{self.NAMES_TEAMS}\n{self._jolly}\n{self._answer}"
 
         try:
-            asksaveasfile(parent=self, filetypes=[
+            asksaveasfile(master=self, filetypes=[
                           ["Text file", "*.txt"]], title="Save date").write(data)
         except SyntaxError:
             pass
@@ -443,7 +367,9 @@ class Main(Tk, Recorder):
             self.clipboard_append(data)
             showwarning('Saving failled',
                         'Data copied in to the clipboard',
-                        deatil=e, parent=self)
+                        deatil=e, master=self)
+
+        self.protocol("WM_DELETE_WINDOW", self.exit_confirm)
 
     # --------------------- Grafic's --------------------- #
 
@@ -515,7 +441,7 @@ class Main(Tk, Recorder):
 
         showerror(
             'Error', message,
-            parent=self,
+            master=self,
             detail=f'Exit code {error_code}\n{details}')
         sys_exit(error_code)
 
@@ -525,7 +451,7 @@ class Main(Tk, Recorder):
         """
 
         if askokcancel('Confirm exit', 'Data can be losted.',
-                       detail=f'Exit code {exit_code}', parent=self):
+                       detail=f'Exit code {exit_code}', master=self):
             sys_exit(exit_code)
 
     # --------------------- Submit's --------------------- #
@@ -535,11 +461,11 @@ class Main(Tk, Recorder):
         The mehtod to submit answers
         """
 
-        if team and self.ceck_question(question) and answer and not self._list_point[team][question][1]:
+        if team and question and answer and not self._list_point[team][question][1]:
 
             if answer == 69:
                 showinfo(
-                    "69", "Triso è libero domani sera per farlo.", parent=self)
+                    "69", "Triso è libero domani sera per farlo.", master=self)
 
             data_point_team = self._list_point[team][question]
             data_question = self.questions_data[question]
@@ -579,17 +505,14 @@ class Main(Tk, Recorder):
         """
 
         # check if other jolly are already been given
-        if team and self.ceck_question(question) and not any(question[2]
-                                                             for question in self._list_point[team][1:]
-                                                             ):
+        if team and question and not any(question[2]
+                                         for question in self._list_point[team][1:]
+                                         ):
 
             self._list_point[team][question][2] = 1
             self.record_jolly(team, self._timer_seconds, question)
 
             self.update_entry()
-
-    def ceck_question(self, question: str) -> bool:
-        return 0 < int(question) <= self.NUMBER_OF_QUESTIONS
 
     # ---------------- Point's calculation ---------------- #
 
@@ -708,6 +631,77 @@ class ArbiterGUI(Toplevel):
         self.team_var.set()
         self.question_var.set()
         self.answer_var.set()
+
+
+class StringVar(Variable):
+    """Value holder for strings variables."""
+
+    def __init__(self, master: Main):
+        """Construct a string variable.
+
+        MASTER can be given as master widget.
+        VALUE is an optional value (defaults to "")
+        NAME is an optional Tcl name (defaults to PY_VARnum).
+
+        If NAME matches an existing variable and VALUE is omitted
+        then the existing value is retained.
+        """
+        Variable.__init__(self, master)
+
+    def set(self, value: str = ""):
+        """Set the variable to VALUE."""
+        self._tk.globalsetvar(self._name, value)
+
+
+class IntVar(StringVar):
+    """Value holder for integer variables."""
+
+    def __init__(self, master: Main):
+        """Construct an integer variable.
+
+        MASTER can be given as master widget.
+        VALUE is an optional value (defaults to 0)
+        NAME is an optional Tcl name (defaults to PY_VARnum).
+
+        If NAME matches an existing variable and VALUE is omitted
+        then the existing value is retained.
+        """
+        StringVar.__init__(self, master)
+        self.NUMBER_OF_QUESTIONS = master.NUMBER_OF_QUESTIONS
+
+    def get(self) -> int:
+        """Return the value of the variable as an integer."""
+        value = int(self._tk.globalgetvar(self._name))
+        try:
+            if 0 < value <= self.NUMBER_OF_QUESTIONS:
+                return value
+            else:
+                return
+        except ValueError:
+            return
+
+
+class DoubleVar(StringVar):
+    """Value holder for float variables."""
+
+    def __init__(self, master: Main):
+        """Construct a float variable.
+
+        MASTER can be given as master widget.
+        VALUE is an optional value (defaults to 0.0)
+        NAME is an optional Tcl name (defaults to PY_VARnum).
+
+        If NAME matches an existing variable and VALUE is omitted
+        then the existing value is retained.
+        """
+        StringVar.__init__(self, master)
+
+    def get(self) -> float:
+        """Return the value of the variable as an integer."""
+        try:
+            return float(self._tk.globalgetvar(self._name))
+        except ValueError:
+            return
 
 
 if __name__ == "__main__":
