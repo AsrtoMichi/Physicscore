@@ -356,7 +356,7 @@ class Main(Tk, Recorder):
         Try to save data if is not possible copy them in clipboard
         """
 
-        data = f"{self.NAMES_TEAMS}\n{self._jolly}\n{self._answer}"
+        data = f'{self.NAMES_TEAMS}\n{self._jolly}\n{self._answer}'
 
         try:
             open(asksaveasfilename(master=self, filetypes=[
@@ -398,8 +398,7 @@ class Main(Tk, Recorder):
 
         self._timer_seconds -= 1
         self.timer_label.configure(
-            text=f'Time left: {self._timer_seconds // 3600:02d}: {(self._timer_seconds % 3600) // 60:02d}: {self._timer_seconds % 60:02d}'
-        )
+            text=f'Time left: {self._timer_seconds // 3600:02d}: {(self._timer_seconds % 3600) // 60:02d}: {self._timer_seconds % 60:02d}')
 
     def update_entry(self):
         """
