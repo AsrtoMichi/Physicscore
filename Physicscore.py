@@ -22,7 +22,7 @@ Alessandro Chiozza, Federico Micelli, Giorgio Sorgente and Gabriele Triso for te
 from math import sqrt
 from tkinter import Tk, Toplevel, Canvas, Entry, Label, Variable
 from tkinter.ttk import Button, Scrollbar, Combobox
-from tkinter.filedialog import askopenfilename, asksaveasfile
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import askokcancel, showerror, showwarning, showinfo
 from _tkinter import TclError
 
@@ -121,7 +121,7 @@ class Main(Tk, Recorder):
         except TclError:
             pass
 
-        Label(self, text='Copyright (C) 2024 AstroMichi').pack(
+        Label(self, text='Copyright (C) 2024 AsrtoMichi').pack(
             side='bottom', anchor="e", padx=8, pady=8)
 
         ini_file_path = join(dirname(__file__), 'Physicscore.ini')
@@ -359,8 +359,8 @@ class Main(Tk, Recorder):
         data = f"{self.NAMES_TEAMS}\n{self._jolly}\n{self._answer}"
 
         try:
-            asksaveasfile(master=self, filetypes=[
-                          ["Text file", "*.txt"]], title="Save date").write(data)
+            open(asksaveasfilename(master=self, filetypes=[
+                ['Text file', '*.txt']], title='Save date')).write(data)
         except SyntaxError:
             pass
         except OSError as e:
@@ -369,7 +369,7 @@ class Main(Tk, Recorder):
                         'Data copied in to the clipboard',
                         deatil=e, master=self)
 
-        self.protocol("WM_DELETE_WINDOW", self.exit_confirm)
+        self.protocol('WM_DELETE_WINDOW', self.exit_confirm)
 
     # --------------------- Grafic's --------------------- #
 
@@ -398,7 +398,7 @@ class Main(Tk, Recorder):
 
         self._timer_seconds -= 1
         self.timer_label.configure(
-            text=f"Time left: {self._timer_seconds // 3600:02d}: {(self._timer_seconds % 3600) // 60:02d}: {self._timer_seconds % 60:02d}"
+            text=f'Time left: {self._timer_seconds // 3600:02d}: {(self._timer_seconds % 3600) // 60:02d}: {self._timer_seconds % 60:02d}'
         )
 
     def update_entry(self):
@@ -423,14 +423,17 @@ class Main(Tk, Recorder):
 
             for question in self.NUMBER_OF_QUESTIONS_RANGE_1:
 
-                points = self.value_question_x_squad(team, question)
+                points, jolly = self.value_question_x_squad(
+                    team, question), self._list_point[team][question][2]
 
-                self.var_question_x_team[row][question].set(points)
+                self.var_question_x_team[row][question].set(
+                    f'{points} J' if jolly else
+                    points)
 
                 self.entry_question_x_team[row][question].config(
                     readonlybackground='red' if points < 0 else 'green' if points > 0 else 'white',
-                    fg='blue' if self._list_point[team][question][2] else 'black',
-                    font=f"Helvetica 9 {'bold' if self._list_point[team][question][2] else 'normal'}")
+                    fg='blue' if jolly else 'black',
+                    font=f"Helvetica 9 {'bold' if jolly else 'normal'}")
 
     # --------------------- Dialog's --------------------- #
 
@@ -475,9 +478,7 @@ class Main(Tk, Recorder):
 
                 data_question[1] += 1
 
-                data_point_team[1] = 1
-
-                data_point_team[3] = self.g(
+                data_point_team[1], data_point_team[3] = 1, self.g(
                     20, data_question[1], sqrt(4*self.Act_t()))
 
                 # give bonus
@@ -592,12 +593,11 @@ class ArbiterGUI(Toplevel):
         self.jolly_button = Button(
             self, text="Submit Jolly", command=self.submit_jolly, state='disabled')
         self.jolly_button.pack(pady=15)
-
         self.answer_button = Button(
             self, text="Submit Answer", command=self.submit_answer, state='disabled')
         self.answer_button.pack()
 
-        Label(self, text='Copyright (C) 2024 AstroMichi').pack(
+        Label(self, text='Copyright (C) 2024 AsrtoMichi').pack(
             side='bottom', anchor="e", padx=8, pady=8)
 
         self.protocol('WM_DELETE_WINDOW', lambda: None)
@@ -673,10 +673,7 @@ class IntVar(StringVar):
         """Return the value of the variable as an integer."""
         value = int(self._tk.globalgetvar(self._name))
         try:
-            if 0 < value <= self.NUMBER_OF_QUESTIONS:
-                return value
-            else:
-                return
+            return value if 0 < value <= self.NUMBER_OF_QUESTIONS else None
         except ValueError:
             return
 
