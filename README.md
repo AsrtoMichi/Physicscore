@@ -4,7 +4,7 @@
 
 # Physicscore
 
-Physicscore is an application designed to simulate physics team competitions. This tool is particularly useful for organizing and managing competitions in the style of the Physics Olympiad. You can find more information about the Physics Olympiad by visiting their [official website](https://olimpiadifisica.org/).
+Physicscore is an application designed to simulate physics team competitions. This tool is particularly useful for organizing and managing competitions in the style of the Physics Championships. You can find more information about the Physics Championships by visiting their [official website](https://olifis.org/).
 
 ## Configuration
 
