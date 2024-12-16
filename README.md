@@ -12,37 +12,53 @@ Physicscore uses a JSON file to configure the competitions, teams, parameters, a
 
 ```json
 {
-	"Name": "Test",
+	"Name" : "Test",
+
 	"Teams": ["Charlie", "David", "Eric", "1", "2", "3"],
-	"Teams_ghost": ["Ada"],
-	"Timers": {
-		"time": 120,
-		"time_for_jolly": 10
+	"Teams_ghost" : ["Ada"],
+
+	"Timers" : {
+		"time" : 1,
+		"time_for_jolly" : 10,
+		"time_format": "use min"
 	},
-	"Parameters": {
-		"Bp": 20,
-		"Dp": 80,
-		"E": 10,
-		"A": 20,
+	
+	"Patameters": {
+		"Bp" : 20,
+		"Dp" : 80,
+		"E" : 10,
+		"A" : 20,
 		"h": 3
 	},
-	"Solutions": [
+
+	"Solutions" : [
+	
 		[1.0, 1.0],
 		[2.0, 1.0],
 		[3.0, 1.0],
 		[4.0, 1.0]
 	],
-	"Actions": {
-		"teams": ["Ada", "Bob"],
-		"jokers": [
+
+	"Solution_format": ["answer", "relative error"],
+
+
+	"Actions" : {
+		"teams" : ["Ada", "Bob"],
+		
+		"jokers" : [
 			["Ada", 1, 10],
 			["Bob", 2, 30]
 		],
-		"answers": [
+
+		"jolly_format" : ["team", "question", "time in seconds"],
+
+		"answers" : [
 			["Ada", 1, 1.0, 20],
 			["Bob", 3, 3.0, 15],
 			["Ada", 2, 2.0, 40]
-		]
+		],
+
+		"answer_format" : ["team", "question", "answer", "time in seconds"]
 	}
 }
 ```
