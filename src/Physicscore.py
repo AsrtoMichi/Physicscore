@@ -6,7 +6,7 @@
 This app is aimed at counting points in physic competitions.
 The app consists of two windows: one for viewing the scores,
 one for entering answers and jolly (only one for team).
-It also saves all anser and jolly in a .txt file, to make grafic.
+It also saves all anser and jolly in a .json file, to make grafic.
 """
 
 __author__ = "Michele Gallo", "https://github.com/AsrtoMichi"
@@ -15,17 +15,17 @@ __license__ = "https://raw.githubusercontent.com/AsrtoMichi/Physicscore/main/LIC
 __README__ = "https://raw.githubusercontent.com/AsrtoMichi/Physicscore/main/README.md"
 
 __credits__ = """
-Alessandro Chiozza, Federico Micelli, Giorgio Sorgente and Gabriele Triso for technical help
+Alessandro Chiozza, Federico Micelli, Giorgio Sorgente and Gabriele Trisolino for technical help
 """
 
-
-from math import sqrt, e
+from random import randrange
+from math import sqrt, e, log10, ceil
 from json import load, dump
 from os.path import join, dirname
 from sys import exit as sys_exit
 
 
-from tkinter import Tk, Toplevel, Button, Label, Frame, Entry, Variable, Canvas, Scrollbar
+from tkinter import Tk, Toplevel, Button, Label, Frame, Entry, Variable, Canvas, Scrollbar, BooleanVar, Checkbutton
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import askokcancel
@@ -73,9 +73,9 @@ class Main(Tk):
         self._timer_seconds, self._TIME_FOR_JOLLY = self.data['Timers']['time'] * \
             60, self.data['Timers']['time_for_jolly'] * 60
 
-        self.questions_data = [
-            0] + [[1 / (1 + question[1] / 100), question[0], 1 + question[1] / 100, 0] for question in self.data['Solutions']]
-        
+        self.questions_data = {question : {'min': 1 / (1 + question_data[1] / 100) , 'avg': question_data[0], 'max': 1 + question_data[1] / 100, 'ca': 0 } for question, question_data in enumerate(self.data['Solutions'], 1) }
+        self.fulled = 0
+
         self.NUMBER_OF_QUESTIONS = len(self.data['Solutions'])
         self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
             1, self.NUMBER_OF_QUESTIONS + 1)
@@ -84,10 +84,14 @@ class Main(Tk):
         self.Bp, self.Dp, self.E, self.A, self.h = self.data['Patameters']['Bp'], self.data['Patameters'][
             'Dp'], self.data['Patameters']['E'], self.data['Patameters']['A'], self.data['Patameters']['h']
 
-        self.teams_data = {name: [self.E * self.NUMBER_OF_QUESTIONS] + [[0] * 4
-                                                         for _ in self.NUMBER_OF_QUESTIONS_RANGE_1
-                                                         ] for name in self.NAMES_TEAMS}
-        
+        self.teams_data = {
+            name: {
+                'bonus': 0 , 'jolly' : None, 'active': False,
+                **{question: {'err': 0, 'sts': False, 'bonus': 0} for question in self.NUMBER_OF_QUESTIONS_RANGE_1}
+            }
+            for name in self.NAMES_TEAMS
+        }
+
         self._jolly,  self._answer = [], []
 
 
@@ -103,25 +107,19 @@ class Main(Tk):
             text=f'Time left: {self._timer_seconds // 3600:02d}:{(self._timer_seconds % 3600) // 60:02d}:00')
         self.timer_label.pack()
 
-        self.canvas = Canvas(self)
-        self.scrollbar = Scrollbar(
-            self, orient='vertical', command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        frame = Frame(self.canvas)
-        self.canvas.create_window((0, 0), window=frame, anchor='nw')
+        self.points_scroll_frame = ScrollableFrame(self)
 
         self.var_question, colum_range = [None], range(
             2, self.NUMBER_OF_QUESTIONS + 2)
 
         for col in colum_range:
 
-            Label(frame, width=6, text=col - 1).grid(row=0, column=col)
+            Label(self.points_scroll_frame.scrollable_frame, width=6, text=col - 1).grid(row=0, column=col)
 
             question_var = StringVar(self)
             self.var_question.append(question_var)
 
-            Entry(frame, width=6, bd=5,
+            Entry(self.points_scroll_frame.scrollable_frame, width=6, bd=5,
                   state='readonly', readonlybackground='white',
                   textvariable=question_var
                   ).grid(row=1, column=col)
@@ -134,11 +132,11 @@ class Main(Tk):
 
             team_var, total_points_team_var = StringVar(self), StringVar(self)
 
-            Label(frame, anchor='e',
+            Label(self.points_scroll_frame.scrollable_frame, anchor='e',
                   textvariable=team_var
                   ).grid(row=row, column=0)
 
-            Entry(frame, width=6, bd=5,
+            Entry(self.points_scroll_frame.scrollable_frame, width=6, bd=5,
                   state='readonly', readonlybackground='white',
                   textvariable=total_points_team_var
                   ).grid(row=row, column=1)
@@ -152,7 +150,7 @@ class Main(Tk):
 
                 points_team_x_question = StringVar(self)
 
-                entry = Entry(frame, width=6, bd=5,
+                entry = Entry(self.points_scroll_frame.scrollable_frame, width=6, bd=5,
                               state='readonly', readonlybackground='white',
                               textvariable=points_team_x_question
                               )
@@ -165,8 +163,6 @@ class Main(Tk):
             self.var_question_x_team.append(var_list)
             self.entry_question_x_team.append(entry_list)
 
-        frame.update_idletasks()
-        self.canvas.config(scrollregion=self.canvas.bbox('all'))
 
         self.update_entry()
 
@@ -182,7 +178,7 @@ class Main(Tk):
 
         self.button1.pack_forget()
         self.button2.pack_forget()
-        self.canvas_scrollbar_pack()
+        self.points_scroll_frame.pack()
 
         TOTAL_TIME = self._timer_seconds
 
@@ -208,7 +204,7 @@ class Main(Tk):
 
         # ----------------- Hinding points ----------------- #
 
-        self.after((TOTAL_TIME - 30) * 1000, self.canvas_scrollbar_pack_forget)
+        self.after((TOTAL_TIME - 30) * 1000, self.points_scroll_frame.pack_forget)
 
         # ------------------- Conclusion ------------------- #
 
@@ -265,13 +261,12 @@ class Main(Tk):
             'answer_format' : ['team', 'question', 'answer', 'time in seconds']
 
         }
-        }, open(asksaveasfilename(master=self, filetypes=(
-            ('JavaScript Object Notation', '*.json')), title='Save date'), 'w')))
+        }, open(asksaveasfilename(master=self, filetypes=[
+            ('JavaScript Object Notation', '*.json')], title='Save date'), 'w')))
 
         self.button2.pack()
         self.button2.configure(text='Main menù', command=self.main_menù_1)
-        self.canvas_scrollbar_pack()
-
+        self.points_scroll_frame.pack()
         self.arbiterGUI.destroy()
     
     def main_menù_1(self):
@@ -279,28 +274,11 @@ class Main(Tk):
         Come back to Main menù
         """
 
-        self.canvas_scrollbar_pack_forget()
+        self.points_scroll_frame.destroy()
         self.button1.config(text='Start competion',
                               command=self.load_data)
         self.button2.config(text='Draw graphs',
                               command=self.draw_graphs)
-    
-    # --------------------- Grafic's --------------------- #
-
-    def canvas_scrollbar_pack(self):
-        """
-        Pack canvas for entryes and scrollbarr
-        """
-
-        self.scrollbar.pack(side='right', fill='y')
-        self.canvas.pack(side='left', expand=True, fill='both')
-
-    def canvas_scrollbar_pack_forget(self):
-        """
-        Pack forget canvas for entryes and scrollbarr
-        """
-        self.scrollbar.pack_forget()
-        self.canvas.pack_forget()
 
     # --------------------- Upadte's --------------------- #
 
@@ -336,10 +314,10 @@ class Main(Tk):
             for question in self.NUMBER_OF_QUESTIONS_RANGE_1:
 
                 points, jolly = self.value_question_x_squad(
-                    team, question), self.teams_data[team][question][2]
+                    team, question), self.teams_data[team]['jolly'] == question
 
                 self.var_question_x_team[row][question].set(
-                    f'{points} J' if jolly else
+                    f'{points} J' if jolly  else
                     points)
 
                 self.entry_question_x_team[row][question].config(
@@ -355,36 +333,36 @@ class Main(Tk):
         """
 
 
-        if team and question and answer and not self.teams_data[team][question][1]:
+        if team and question and answer and not self.teams_data[team][question]['sts']:
 
             data_point_team = self.teams_data[team][question]
             data_question = self.questions_data[question]
 
+            self.teams_data[team]['active'] = True
+
             # if correct
-            if data_question[0] <= answer / \
-                    data_question[1] <= data_question[2]:
+            if data_question['min'] <= answer / \
+                    data_question['avg'] <= data_question['max']:
 
-                data_question[3] += 1
+                data_question['ca'] += 1
 
-                data_point_team[1], data_point_team[3] = True, self.g(
-                    20, data_question[3], sqrt(4 * self.Act_t()))
+                data_point_team['sts'], data_point_team['bonus'] = True, self.g(
+                    20, data_question['ca'], sqrt(4 * self.Act_t()))
 
                 # give bonus
-                if [question[1]
-                    for question in self.teams_data[team][1:]
-                    ].count(True) == self.NUMBER_OF_QUESTIONS:
+                if all(self.teams_data[team][quest]['sts']
+                    for quest in self.NUMBER_OF_QUESTIONS_RANGE_1):
 
-                    self.questions_data[0] += 1
+                    self.fulled += 1
 
-                    self.teams_data[team][0] += self.g(
+                    self.teams_data[team]['bonus'] += self.g(
                         20 * self.NUMBER_OF_QUESTIONS,
-                        self.questions_data[0],
-                        sqrt(
-                            2 * self.Act_t()))
+                        self.fulled,
+                        sqrt(2 * self.Act_t()))
 
             # if wrong
             else:
-                data_point_team[0] += 1
+                data_point_team['err'] += 1
 
             self.update_entry()
 
@@ -396,10 +374,9 @@ class Main(Tk):
         """
 
         # check if other jolly are already been given
-        if team and question and not any(
-                question[2] for question in self.teams_data[team][1:]):
+        if team and question and not self.teams_data[team]['jolly']:
 
-            self.teams_data[team][question][2] = True
+            self.teams_data[team]['jolly'] = True
             
             self._jolly.append([team, question, self._timer_seconds])
 
@@ -417,7 +394,7 @@ class Main(Tk):
         """
 
         return max(self._NUMBER_OF_TEAMS / 2,
-                   [any(question[1] for question in self.teams_data[team][1:])
+                   [self.teams_data[team]['active']
                        for team in self.NAMES_TEAMS].count(True),
                    5)
 
@@ -427,8 +404,8 @@ class Main(Tk):
         """
 
         return self.Bp + self.g(self.Dp + self.A * sum(min(self.h,
-                                                           self.teams_data[team][question][0]) for team in self.NAMES_TEAMS) / self.Act_t(),
-                                self.questions_data[question][3],
+                                                           self.teams_data[team][question]['err']) for team in self.NAMES_TEAMS) / self.Act_t(),
+                                self.questions_data[question]['ca'],
                                 self.Act_t())
 
     def value_question_x_squad(self, team: str, question: int) -> int:
@@ -439,9 +416,9 @@ class Main(Tk):
         list_point_team = self.teams_data[team][question]
 
         return (
-            list_point_team[1] *
-            (self.value_question(question) + list_point_team[3])
-            - list_point_team[0] * self.E) * (list_point_team[2] + 1)
+            list_point_team['sts'] *
+            (self.value_question(question) + list_point_team['bonus'])
+            - list_point_team['err'] * self.E) * ((self.teams_data[team]['jolly'] == question )+ 1)
 
     def total_points_team(self, team: str) -> int:
         """
@@ -449,13 +426,182 @@ class Main(Tk):
         """
         return sum(self.value_question_x_squad(team, question)
                    for question in self.NUMBER_OF_QUESTIONS_RANGE_1
-                   ) + self.teams_data[team][0]
+                   ) + self.teams_data[team]['bonus'] +  (self.E*self.NUMBER_OF_QUESTIONS if self.teams_data[team]['active'] else 0)
 
     # ---------------------- Grafics ---------------------- #
 
     def draw_graphs(self):
-        pass
+        self.data = load(open(askopenfilename(
+            master=self,
+            title='Select the .json file',
+            filetypes=[('JavaScript Object Notation', '*.json')])))
 
+        self.title(self.data['Name'])
+
+        self.NAMES_TEAMS = self.data['Actions']['teams']
+        self._NUMBER_OF_TEAMS = len(self.NAMES_TEAMS)
+
+        self._timer_seconds = self.data['Timers']['time'] * 60
+
+        self.questions_data = {question : {'min': 1 / (1 + question_data[1] / 100) , 'avg': question_data[0], 'max': 1 + question_data[1] / 100, 'ca': 0 } for question, question_data in enumerate(self.data['Solutions'], 1) }
+        self.fulled = 0
+        
+        self.NUMBER_OF_QUESTIONS = len(self.data['Solutions'])
+        self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
+            1, self.NUMBER_OF_QUESTIONS + 1)
+        
+
+        self.Bp, self.Dp, self.E, self.A, self.h = self.data['Patameters']['Bp'], self.data['Patameters'][
+            'Dp'], self.data['Patameters']['E'], self.data['Patameters']['A'], self.data['Patameters']['h']
+
+        self.teams_data = {
+            name: {
+                'bonus': 0 , 'jolly' : None, 'active': False,
+                **{question: {'err': 0, 'sts': False, 'bonus': 0} for question in self.NUMBER_OF_QUESTIONS_RANGE_1}
+            }
+            for name in self.NAMES_TEAMS
+        }
+
+
+        colors = [ 'red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray', 'cyan', 'magenta', 'lime', 'indigo', 'violet', 'gold', 'silver', 'maroon', 'navy', 'teal', 'lavender', 'olive', 'coral', 'turquoise', 'salmon', 'plum', 'orchid', 'chocolate', 'ivory', 'beige', 'mint', 'peach', 'amber' ]
+
+
+        ### simulate  make lines
+
+
+        self.button1.config(text='Main menù', command=self.main_menù_2)
+        self.button2.pack_forget()
+
+        self.frame = Frame(self)
+        self.frame.pack()
+
+        # Create the canvas for the teams graph
+        self.teams_canvas = Canvas(self.frame, width=600, height=400, bg='white')
+        self.teams_canvas.grid(column=0, row=0)
+        
+        self.teams_scroll_frame = ScrollableFrame(self.frame)
+        self.teams_scroll_frame.grid(column=1, row=0)
+
+        
+        # Add a label to the sidebar
+        self.teams_label = Label(self.teams_scroll_frame.scrollable_frame, text="Show/Hide Teams").pack()
+
+        # Create checkboxes for each team
+        self.teams_vars = {team: BooleanVar(self) for team in  self.NAMES_TEAMS}
+        color_iterator = iter(colors)
+        self.teams_color = {team: next(color_iterator, f'#{randrange(256):02x}{randrange(256):02x}{randrange(256):02x}') for team in  self.NAMES_TEAMS}
+
+        for team in self.NAMES_TEAMS:
+            Checkbutton(self.teams_scroll_frame.scrollable_frame, text=team, variable=self.teams_vars[team], command=self.update_teams_graph, fg=self.teams_color[team]).pack(anchor='w')
+        
+
+        # Create the canvas for the teams graph
+        self.questions_canvas = Canvas(self.frame, width=600, height=400, bg='white')
+        self.questions_canvas.grid(column=0, row=1, pady=20)
+
+        
+        self.questions_scroll_frame = ScrollableFrame(self.frame,  width=300, height=300)
+        self.questions_scroll_frame.grid(column=1, row=1, pady=20)
+
+
+        # Add a label to the sidebar
+        Label(self.questions_scroll_frame.scrollable_frame, text="Show/Hide Question").pack()
+
+        self.questions_vars = {question: BooleanVar(self) for question in  self.NUMBER_OF_QUESTIONS_RANGE_1}
+        color_iterator = iter(colors)
+        self.questions_color =  {question: next(color_iterator, f'#{randrange(256):02x}{randrange(256):02x}{randrange(256):02x}') for question in self.NUMBER_OF_QUESTIONS_RANGE_1}
+
+        for question in self.NUMBER_OF_QUESTIONS_RANGE_1:
+            Checkbutton(self.questions_scroll_frame.scrollable_frame, text=question, variable=self.questions_vars[question], command=self.update_questions_graph, fg=self.questions_color[question]).pack(anchor='w')
+
+
+        # Draw the initial graphs
+        self.draw_axes(self.teams_canvas, self._timer_seconds, 1500)
+        self.draw_axes(self.questions_canvas, self._timer_seconds, 200)
+
+        self.update_teams_graph()
+        self.update_questions_graph()
+
+
+    
+    def draw_axes(self, canvas: Canvas, max_x: int, max_y: int):
+
+        def step(max: int) -> int:
+            fact =  10**int(log10(max))
+            return int(ceil(max/fact)*fact/10)
+
+        x_o = 70
+        y_o = canvas.winfo_reqheight() - 50
+
+        l_x = canvas.winfo_reqwidth() - 100
+        l_y = canvas.winfo_reqheight() - 80
+
+        n_x = 10
+        n_y = 10
+
+        d_x = l_x / n_x
+        d_y = l_y / n_y 
+
+        i_x = step(max_x)
+        i_y = step(max_y)
+
+
+        # Draw the x and y axes
+        canvas.create_line(x_o, y_o, x_o+l_x, y_o, arrow='last')  # x-axis
+        canvas.create_line(x_o, y_o, x_o, y_o-l_y, arrow='last')  # y-axis
+        
+        # Label the axes
+        canvas.create_text(x_o+l_x/2, canvas.winfo_reqheight() - 15, text="Time")
+        canvas.create_text(15, y_o-l_y/2, text="Value", angle=90)
+        
+        # Add grid lines and labels
+        for i in range(1, n_x+1):
+
+            x = x_o + i * d_x
+            canvas.create_line(x, y_o, x, y_o-d_y*n_y, dash=(2, 2))
+            canvas.create_text(x, y_o +10, text=str(i*i_x))
+        
+        for i in range(1, n_y+1):
+            y = y_o - i * d_y
+            canvas.create_line(x_o, y, x_o+n_x*d_x, y, dash=(2, 2))
+            canvas.create_text(x_o - 25, y, text=str(i*i_y))
+    
+    def update_teams_graph(self):
+        # Clear existing lines on teams canvas
+        self.teams_canvas.delete("line")
+        
+        # Example data for each team
+        data = {
+            'Ada': [(50, 150), (110, 130), (170, 110), (230, 90), (290, 70)],
+            'Bob': [(50, 150), (110, 140), (170, 130), (230, 120), (290, 110)],
+            # Add more teams as needed
+        }
+        
+        # Draw lines for each team if the checkbox is selected
+        for team, points in data.items():
+            if self.teams_vars[team].get():
+                self.teams_canvas.create_line(points, fill=self.teams_color[team], tags="line", width=2)
+    
+    def update_questions_graph(self):
+        # Clear existing lines on questions canvas
+        self.questions_canvas.delete("line")
+        
+        # Example data for each question
+        data = {
+            'Question 1': [(50, 150), (110, 130), (170, 110), (230, 90), (290, 70)],
+            'Question 2': [(50, 150), (110, 140), (170, 130), (230, 120), (290, 110)],
+            'Question 3': [(50, 150), (110, 135), (170, 120), (230, 105), (290, 90)]
+            # Add more questions as needed
+        }
+        
+        # Draw lines for each question if the checkbox is selected
+        for question, points in data.items():
+            if self.questions_vars.get(question, BooleanVar()).get():
+                self.questions_canvas.create_line(points, fill=self.questions_color[question], tags="line", width=2)
+
+    def main_menù_2(self):
+        self.frame.destroy()
+        self.button1.config(text='Start competion',command=self.load_data)
 
 class ArbiterGUI(Toplevel):
     """
@@ -581,7 +727,6 @@ class IntVar(StringVar):
         except ValueError:
             return None
 
-
 class DoubleVar(StringVar):
     """Value holder for float variables."""
 
@@ -604,6 +749,25 @@ class DoubleVar(StringVar):
         except ValueError:
             return None
 
+class ScrollableFrame(Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        canvas = Canvas(self)
+        scrollbar = Scrollbar(self, orient="vertical", command=canvas.yview)
+        self.scrollable_frame = Frame(canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
 if __name__ == "__main__":
     Main().mainloop()
