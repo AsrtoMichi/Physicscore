@@ -1,4 +1,7 @@
 {
+	"Author": "Michele Gallo",
+	"Template" : "https://raw.githubusercontent.com/AsrtoMichi/Physicscore/main/src/Template.json",
+
 	"Name" : "Test",
 
 	"Teams": ["Charlie", "David", "Eric", "1", "2", "3"],
