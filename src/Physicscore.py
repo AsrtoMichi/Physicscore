@@ -21,13 +21,12 @@ Alessandro Chiozza, Federico Micelli, Giorgio Sorgente and Gabriele Trisolino fo
 from random import randrange
 from math import sqrt, e, log10, ceil
 from json import load, dump
-from os import stat
 from os.path import join, dirname, isdir
 from sys import exit as sys_exit
 from typing import  Tuple, Dict, List
 
-from tkinter import Tk, Toplevel, Button, Label, Frame, Entry, Canvas, Scrollbar, Variable, StringVar, BooleanVar, Checkbutton
-from tkinter.ttk import Combobox
+from tkinter import Tk, Toplevel, Canvas, Entry, Variable, BooleanVar
+from tkinter.ttk import Button, Label, Frame, Checkbutton, Scrollbar, OptionMenu
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import askokcancel
 
@@ -48,23 +47,36 @@ class Main(Tk):
 
         self.protocol('WM_DELETE_WINDOW', lambda: sys_exit() if askokcancel(
             'Confirm exit', 'Data can be losted.',  master=self) else None)
+        
+        self.button1 = Button(self)
+        self.button2 = Button(self)
 
-        self.button1 = Button(self, text='Start competion',
+        self.show_menù()
+
+    def show_menù(self):
+    
+
+        self.button1.config(text='Start competion',
                               command=self.new_competition)
-        self.button2 = Button(self, text='Draw graphs',
+        self.button2.config(text='Draw graphs',
                               command=self.draw_graphs)
 
-        self.button1.pack()
+        self.button1.pack(pady=15)
         self.button2.pack()
 
     # ----------------- Runtime competiton -----------------#
 
     def load_data(self):
+        while True:
+            try:
+                return load(open(askopenfilename(
+                master=self,
+                title='Select the .json file',
+                filetypes=[('JavaScript Object Notation', '*.json')])))
+            except Exception as e: 
+                print(Exception)
         
-        return load(open(askopenfilename(
-            master=self,
-            title='Select the .json file',
-            filetypes=[('JavaScript Object Notation', '*.json')])))
+         
 
     def new_competition(self):
 
@@ -78,7 +90,6 @@ class Main(Tk):
             'Dp'], self.data['Patameters']['E'], self.data['Patameters']['A'], self.data['Patameters']['h'])
 
         self.timer: int = self.data['Timers']['time'] * 60 
-
 
         self._jolly,  self._answer = [], []
 
@@ -104,7 +115,7 @@ class Main(Tk):
 
             Label(self.points_scroll_frame.scrollable_frame, width=6, text=col - 1).grid(row=0, column=col)
 
-            question_var = StringVar(self)
+            question_var = Variable(self)
             self.var_question.append(question_var)
 
             Entry(self.points_scroll_frame.scrollable_frame, width=6, bd=5,
@@ -118,7 +129,7 @@ class Main(Tk):
 
         for row in range(2,  len(self.competition.NAMES_TEAMS)  + 2):
 
-            team_var, total_points_team_var = StringVar(self), StringVar(self)
+            team_var, total_points_team_var = Variable(self), Variable(self)
 
             Label(self.points_scroll_frame.scrollable_frame, anchor='e',
                   textvariable=team_var
@@ -136,7 +147,7 @@ class Main(Tk):
 
             for col in colum_range:
 
-                points_team_x_question = StringVar(self)
+                points_team_x_question = Variable(self)
 
                 entry = Entry(self.points_scroll_frame.scrollable_frame, width=6, bd=5,
                               state='readonly', readonlybackground='white',
@@ -163,12 +174,11 @@ class Main(Tk):
         self.arbiterGUI.resizable(False, False)
 
         Label(self.arbiterGUI, text="Team:").pack()
-        self.team_var = StringVar(self)
-        Combobox(
+        self.team_var = Variable(self)
+        OptionMenu(
             self.arbiterGUI,
-            textvariable=self.team_var,
-            values=self.data['Teams'],
-            state='readonly'
+            self.team_var,
+            *self.data['Teams'],
         ).pack()
 
         Label(self.arbiterGUI, text="Question number:").pack()
@@ -208,6 +218,7 @@ class Main(Tk):
         self.button1.pack_forget()
         self.button2.pack_forget()
         self.points_scroll_frame.pack()
+        self.clean()
 
         TOTAL_TIME = self.timer
 
