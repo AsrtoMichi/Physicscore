@@ -21,28 +21,30 @@ Alessandro Chiozza, Federico Micelli, Giorgio Sorgente and Gabriele Trisolino fo
 from random import randrange
 from math import sqrt, e, log10, ceil
 from json import load, dump
-from os.path import join, dirname
+from os import stat
+from os.path import join, dirname, isdir
 from sys import exit as sys_exit
 from typing import  Tuple, Dict, List
 
-from tkinter import Tk, Toplevel, Button, Label, Frame, Entry, Variable, Canvas, Scrollbar, BooleanVar, Checkbutton
+from tkinter import Tk, Toplevel, Button, Label, Frame, Entry, Canvas, Scrollbar, Variable, StringVar, BooleanVar, Checkbutton
 from tkinter.ttk import Combobox
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import askokcancel
-from _tkinter import TclError
+
 
 
 class Main(Tk):
     def __init__(self):
+
         super().__init__()
 
         Label(self, text='Copyright (C) 2024 AsrtoMichi').pack(
             side='bottom', anchor='e', padx=8, pady=8)
 
-        try:
+        dir_ico = join(dirname(__file__), 'MathScore.ico')
+        if isdir(dir_ico):
             self.iconbitmap(default=join(dirname(__file__), 'MathScore.ico'))
-        except TclError:
-            pass
+
 
         self.protocol('WM_DELETE_WINDOW', lambda: sys_exit() if askokcancel(
             'Confirm exit', 'Data can be losted.',  master=self) else None)
@@ -59,14 +61,14 @@ class Main(Tk):
 
     def load_data(self):
         
-        self.data = load(open(askopenfilename(
+        return load(open(askopenfilename(
             master=self,
             title='Select the .json file',
             filetypes=[('JavaScript Object Notation', '*.json')])))
 
     def new_competition(self):
 
-        self.load_data()
+        self.data = self.load_data()
 
         self.title(self.data['Name'])
 
@@ -170,7 +172,7 @@ class Main(Tk):
         ).pack()
 
         Label(self.arbiterGUI, text="Question number:").pack()
-        self.question_var = IntVar(self)
+        self.question_var = IntVar(self, self.competition.NUMBER_OF_QUESTIONS)
         Entry(self.arbiterGUI, textvariable=self.question_var).pack()
 
         Label(self.arbiterGUI, text="Answer:").pack()
@@ -392,38 +394,33 @@ class Main(Tk):
         """
         Reset value of entryes
         """
-        self.team_var.set()
-        self.question_var.set()
-        self.answer_var.set()
-
-    # ---------------------- Grafics ---------------------- #
+        self.team_var.set('')
+        self.question_var.set('')
+        self.answer_var.set('')
+    
 
     def draw_graphs(self):
 
-        self.data = load(open(askopenfilename(
-            master=self,
-            title='Select the .json file',
-            filetypes=[('JavaScript Object Notation', '*.json')])))
+        data = self.load_data()
 
-        self.title(self.data['Name'])
+        self.title(data['Name'])
 
-        competition = Competition(self.data['Actions']['teams'],
-                                        self.data['Solutions']
-                                        , self.data['Patameters']['Bp'], self.data['Patameters'][
-            'Dp'], self.data['Patameters']['E'], self.data['Patameters']['A'], self.data['Patameters']['h'])
+        competition = Competition(data['Actions']['teams'],
+                                        data['Solutions']
+                                        , data['Patameters']['Bp'], data['Patameters'][
+            'Dp'], data['Patameters']['E'], data['Patameters']['A'], data['Patameters']['h'])
 
-        self.NAMES_TEAMS = self.data['Actions']['teams']
-        self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
-            1, len(self.data['Solutions']) + 1)
-        TOTAL_TIME = self.data['Timers']['time'] * 60
+        NUMBER_OF_QUESTIONS_RANGE_1 = range(
+            1, len(data['Solutions']) + 1)
+        TOTAL_TIME = data['Timers']['time'] * 60
 
-        data_teams = {team: [] for team in self.NAMES_TEAMS}
-        data_question = {question: [] for question in self.NUMBER_OF_QUESTIONS_RANGE_1}
+        data_teams = {team: [] for team in competition.NAMES_TEAMS}
+        data_question = {question: [] for question in NUMBER_OF_QUESTIONS_RANGE_1}
 
-        colors = [ 'red', 'green', 'blue', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray', 'cyan', 'magenta', 'lime', 'indigo', 'violet', 'gold', 'silver', 'maroon', 'navy', 'teal', 'lavender', 'olive', 'coral', 'turquoise', 'salmon', 'plum', 'orchid', 'chocolate', 'ivory', 'beige', 'mint', 'peach', 'amber' ]
+        colors = [ 'red', 'green', 'blue', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray', 'cyan', 'magenta', 'lime', 'indigo', 'violet', 'gold', 'silver', 'yellow', 'maroon', 'navy', 'teal', 'lavender', 'olive', 'coral', 'turquoise', 'salmon', 'plum', 'orchid', 'chocolate', 'ivory', 'beige', 'mint', 'peach', 'amber' ]
        
         def register_data():       
-            for team in self.NAMES_TEAMS:
+            for team in competition.NAMES_TEAMS:
                 data_teams[team].append((timer, competition.total_points_team(team) ))
                 
             for question in competition.NUMBER_OF_QUESTIONS_RANGE_1:
@@ -432,26 +429,38 @@ class Main(Tk):
         timer = TOTAL_TIME
         register_data()
 
-        for action in sorted(self.data['Actions']['answers'] + self.data['Actions']['jokers'], key=lambda x: x[-1], reverse=True):
+        for action in sorted(data['Actions']['answers'] + data['Actions']['jokers'], key=lambda x: x[-1], reverse=True):
             timer = action[-1]            
             competition.submit_jolly(*action[:2]) if len(action) == 3 else competition.submit_answer(*action[:3])
             register_data()
 
         timer = 0 
         register_data()
-        
 
-        self.button1.config(text='Main menù', command=self.main_menù_2)
+
+        height = 400
+        width_canvas = 700
+        width_frame = 300
+        
+        def main_menù_2():
+
+
+            self.frame.destroy()
+            self.button1.config(text='Start competion',command=self.new_competition)
+            self.button2.pack()
+
+
+        self.button1.config(text='Main menù', command=main_menù_2)
         self.button2.pack_forget()
 
         self.frame = Frame(self)
         self.frame.pack()
 
         # Create the canvas for the teams graph
-        self.teams_canvas = Canvas(self.frame, width=600, height=400, bg='white')
+        self.teams_canvas = Canvas(self.frame, width=width_canvas, height=height, bg='white')
         self.teams_canvas.grid(column=0, row=0)
         
-        teams_scroll_frame = ScrollableFrame(self.frame)
+        teams_scroll_frame = ScrollableFrame(self.frame, width = width_frame, height=height )
         teams_scroll_frame.grid(column=1, row=0)
 
         
@@ -459,132 +468,126 @@ class Main(Tk):
         self.teams_label = Label(teams_scroll_frame.scrollable_frame, text="Show/Hide Teams").pack()
 
         # Create checkboxes for each team
-        self.teams_vars = {team: BooleanVar(self) for team in  self.NAMES_TEAMS}
+        self.teams_vars = {team: BooleanVar(self) for team in  competition.NAMES_TEAMS}
         color_iterator = iter(colors)
-        teams_color = {team: next(color_iterator, f'#{randrange(256):02x}{randrange(256):02x}{randrange(256):02x}') for team in self.NAMES_TEAMS}
+        teams_color = {team: next(color_iterator, f'#{randrange(256):02x}{randrange(256):02x}{randrange(256):02x}') for team in competition.NAMES_TEAMS}
 
-        for team in self.NAMES_TEAMS:
-            Checkbutton(teams_scroll_frame.scrollable_frame, text=team, variable=self.teams_vars[team], fg=teams_color[team], command=self.update_teams_graph).pack(anchor='w')
+        def update_teams_graph():
+        
+            # Draw lines for each team if the checkbox is selected
+            for team in competition.NAMES_TEAMS:
+                for element in self.teams_canvas.find_withtag(f'tag_{team}'):
+                    self.teams_canvas.itemconfigure(element, state= 'normal' if self.teams_vars[team].get() else 'hidden')
+
+        for team in competition.NAMES_TEAMS:
+            Checkbutton(teams_scroll_frame.scrollable_frame, text=team, variable=self.teams_vars[team], fg=teams_color[team], command=update_teams_graph).pack(anchor='w')
         
 
         # Create the canvas for the teams graph
-        self.questions_canvas = Canvas(self.frame, width=600, height=400, bg='white')
+        self.questions_canvas = Canvas(self.frame, width=width_canvas, height=height, bg='white')
         self.questions_canvas.grid(column=0, row=1, pady=20)
 
         
-        questions_scroll_frame = ScrollableFrame(self.frame,  width=300, height=300)
+        questions_scroll_frame = ScrollableFrame(self.frame,  width = width_frame, height=height )
         questions_scroll_frame.grid(column=1, row=1, pady=20)
 
 
         # Add a label to the sidebar
         Label(questions_scroll_frame.scrollable_frame, text="Show/Hide Question").pack()
 
-        self.questions_vars = {question: BooleanVar(self) for question in  self.NUMBER_OF_QUESTIONS_RANGE_1}
+        self.questions_vars = {question: BooleanVar(self) for question in  NUMBER_OF_QUESTIONS_RANGE_1}
         color_iterator = iter(colors)
-        questions_color =  {question: next(color_iterator, f'#{randrange(256):02x}{randrange(256):02x}{randrange(256):02x}') for question in self.NUMBER_OF_QUESTIONS_RANGE_1}
+        questions_color =  {question: next(color_iterator, f'#{randrange(256):02x}{randrange(256):02x}{randrange(256):02x}') for question in NUMBER_OF_QUESTIONS_RANGE_1}
+
         
+        def update_questions_graph():
+                    
+            # Draw lines for each team if the checkbox is selected
+            for question in NUMBER_OF_QUESTIONS_RANGE_1:
+                for element in self.questions_canvas.find_withtag(f'tag_{question}'):
+                    self.questions_canvas.itemconfigure(element, state= 'normal' if self.questions_vars[question].get() else 'hidden')        
 
-        for question in self.NUMBER_OF_QUESTIONS_RANGE_1:
-            Checkbutton(questions_scroll_frame.scrollable_frame, text=question, variable=self.questions_vars[question], command=self.update_questions_graph,  fg=questions_color[question]).pack(anchor='w')
 
+        for question in NUMBER_OF_QUESTIONS_RANGE_1:
+            Checkbutton(questions_scroll_frame.scrollable_frame, text=question, variable=self.questions_vars[question], command=update_questions_graph,  fg=questions_color[question]).pack(anchor='w')
+
+        def draw_graph(canvas: Canvas, data: Dict[int | str, List[Tuple[int, int, int, int]]], colors: Dict[ int | str, str ],  max_x: int ):
+
+
+            def max_axis(max: int) -> int:
+                fact =  10**int(log10(max))
+                return int(ceil(max/fact)*fact)
+
+            height = canvas.winfo_reqheight()
+            widht = canvas.winfo_reqwidth()
+
+            # cordinate O
+            x_o = 70
+            y_o = height - 50
+
+            # axis lenght
+            x_a_l = widht - 100
+            y_a_l = height - 80
+
+            # number of indicator
+            x_a_i_n = 10
+            y_a_i_n = 10
+
+            # max value of each axis
+            max_a_x = max_axis(max_x)
+            max_a_y = max_axis(max(line[-1] for data_set in data.values() for line in data_set))
+
+            # distance between indicator
+            x_a_i_d = x_a_l / x_a_i_n
+            y_a_i_d = y_a_l / y_a_i_n
+            
+            # interval betwen indicator
+            x_a_d_i = max_a_x/x_a_i_n
+            y_a_d_i = max_a_y/y_a_i_n
+            
+            # unit on the axis
+            u_x_a = x_a_l/max_a_x
+            u_y_a = y_a_l/max_a_y
+
+            # Draw the x and y axes
+            canvas.create_line(x_o, y_o, x_o+x_a_l, y_o, arrow='last', tags = 'x-axis')
+            canvas.create_line(x_o, y_o, x_o, y_o-y_a_l, arrow='last', tags = 'y-axis')
+            
+            # Label the axes
+            canvas.create_text(x_o+x_a_l/2, canvas.winfo_reqheight() - 15, text="Time", tags = 'time')
+            canvas.create_text(15, y_o-y_a_l/2, text="Value", angle=90, tags= 'value')
+            
+            # Add grid lines and labels
+            for i in range(1, x_a_i_n+1):
+                x = x_o + i * x_a_i_d
+                canvas.create_line(x, y_o, x, y_o-y_a_i_d*y_a_i_n, dash=(2, 2))
+                canvas.create_text(x, y_o +10, text=str((max_x - i*x_a_d_i)/60))
+            canvas.create_text(x_o, y_o +10, text=str(max_x /60))
+
+            for i in range(1, y_a_i_n+1):
+                y = y_o - i * y_a_i_d
+                canvas.create_line(x_o, y, x_o+x_a_i_n*x_a_i_d, y, dash=(2, 2))
+                canvas.create_text(x_o - 25, y, text=str(i*y_a_d_i))
+
+
+            for tag, points in data.items():
+                line_tag = f'tag_{tag}'
+                color = colors[tag]
+                for point_index in range(len(points)-1):
+                    y1_2_coord = y_o - points[point_index][1] * u_y_a
+                    x2_3_coord = (max_x - points[point_index  + 1][0]) * u_x_a + x_o
+                    canvas.create_line(((max_x - points[point_index][0]) * u_x_a + x_o, y1_2_coord), (x2_3_coord, y1_2_coord), tags=line_tag, width=2, fill=color)
+                    canvas.create_line((x2_3_coord, y1_2_coord), (x2_3_coord, y_o - points[point_index+1][1] * u_y_a), tags=line_tag, width=2, fill=color)
+        
         # Draw the initial graphs
-        self.draw_graph(self.teams_canvas, data_teams, teams_color, TOTAL_TIME)
-        self.draw_graph(self.questions_canvas, data_question, questions_color, TOTAL_TIME )
+        draw_graph(self.teams_canvas, data_teams, teams_color, TOTAL_TIME)
+        draw_graph(self.questions_canvas, data_question, questions_color, TOTAL_TIME )
 
-        # self.update_teams_graph()
-        # self.update_questions_graph()
+        update_teams_graph()
+        update_questions_graph()
     
-    def draw_graph(self, canvas: Canvas, data: Dict[int | str, List[Tuple[int, int, int, int]]], colors: Dict[ int | str, str ],  max_x: int ):
-
-
-        def max_axis(max: int) -> int:
-            fact =  10**int(log10(max))
-            return int(ceil(max/fact)*fact)
-
-        height = canvas.winfo_reqheight()
-        widht = canvas.winfo_reqwidth()
-
-        # cordinate O
-        x_o = 70
-        y_o = height - 50
-
-        # axis lenght
-        x_a_l = widht - 100
-        y_a_l = height - 80
-
-        # number of indicator
-        x_a_i_n = 10
-        y_a_i_n = 10
-
-        # max value of each axis
-        max_a_x = max_axis(max_x)
-        max_a_y = max_axis(max(line[-1] for data_set in data.values() for line in data_set))
-
-        # distance between indicator
-        x_a_i_d = x_a_l / x_a_i_n
-        y_a_i_d = y_a_l / y_a_i_n
-        
-        # interval betwen indicator
-        x_a_d_i = max_a_x/x_a_i_n
-        y_a_d_i = max_a_y/y_a_i_n
-        
-        # unit on the axis
-        u_x_a = x_a_l/max_a_x
-        u_y_a = y_a_l/max_a_y
-
-        # Draw the x and y axes
-        canvas.create_line(x_o, y_o, x_o+x_a_l, y_o, arrow='last', tags = 'x-axis')
-        canvas.create_line(x_o, y_o, x_o, y_o-y_a_l, arrow='last', tags = 'y-axis')
-        
-        # Label the axes
-        canvas.create_text(x_o+x_a_l/2, canvas.winfo_reqheight() - 15, text="Time", tags = 'time')
-        canvas.create_text(15, y_o-y_a_l/2, text="Value", angle=90, tags= 'value')
-        
-        # Add grid lines and labels
-        for i in range(1, x_a_i_n+1):
-            x = x_o + i * x_a_i_d
-            canvas.create_line(x, y_o, x, y_o-y_a_i_d*y_a_i_n, dash=(2, 2))
-            canvas.create_text(x, y_o +10, text=str((max_x - i*x_a_d_i)/60))
-        canvas.create_text(x_o, y_o +10, text=str(max_x /60))
-
-        for i in range(1, y_a_i_n+1):
-            y = y_o - i * y_a_i_d
-            canvas.create_line(x_o, y, x_o+x_a_i_n*x_a_i_d, y, dash=(2, 2))
-            canvas.create_text(x_o - 25, y, text=str(i*y_a_d_i))
-
-
-        for tag, points in data.items():
-            for point_index in range(len(points)-1):
-                y1_coord = y_o - points[point_index][1] * u_y_a
-                x2_coord = (max_x - points[point_index  + 1][0]) * u_x_a + x_o
-                y2_coord = y1_coord
-                x3_coord = x2_coord
-                canvas.create_line(((max_x - points[point_index][0]) * u_x_a + x_o, y1_coord), (x2_coord, y2_coord), tags=tag, width=2, fill=colors[tag], state='hidden')
-                canvas.create_line((x2_coord, y2_coord), (x3_coord, y_o - points[point_index+1][1] * u_y_a), tags=tag, width=2, fill=colors[tag], state='hidden')
 
     
-    def update_teams_graph(self):
-        
-        # Draw lines for each team if the checkbox is selected
-        for team in self.NAMES_TEAMS:
-            for element in self.teams_canvas.find_withtag(team):
-                self.teams_canvas.itemconfigure(element, state= 'normal' if self.teams_vars[team].get() else 'hidden')
-    
-    def update_questions_graph(self):
-                
-        # Draw lines for each team if the checkbox is selected
-        for question in self.NUMBER_OF_QUESTIONS_RANGE_1:
-            for element in self.questions_canvas.find_withtag(question):
-                self.questions_canvas.itemconfigure(element, state= 'normal' if self.questions_vars[question].get() else 'hidden')
-
-    def main_menù_2(self):
-
-        del self.NAMES_TEAMS, self.NUMBER_OF_QUESTIONS_RANGE_1
-
-        self.frame.destroy()
-        self.button1.config(text='Start competion',command=self.new_competition)
-        self.button2.pack()
-
 class Competition():
     def __init__(self,
                  teams: Tuple[str],
@@ -617,6 +620,7 @@ class Competition():
         """
 
         if team and question and answer and not self.teams_data[team][question]['sts']:
+
 
             data_point_team = self.teams_data[team][question]
             data_question = self.questions_data[question]
@@ -707,29 +711,10 @@ class Competition():
 
 
 
-class StringVar(Variable):
-    """Value holder for strings variables."""
-
-    def __init__(self, master: Main):
-        """Construct a string variable.
-
-        MASTER can be given as master widget.
-        VALUE is an optional value (defaults to "")
-        NAME is an optional Tcl name (defaults to PY_VARnum).
-
-        If NAME matches an existing variable and VALUE is omitted
-        then the existing value is retained.
-        """
-        Variable.__init__(self, master)
-
-    def set(self, value: str = ''):
-        """Set the variable to VALUE."""
-        self._tk.globalsetvar(self._name, value)
-
-class IntVar(StringVar):
+class IntVar(Variable):
     """Value holder for integer variables."""
 
-    def __init__(self, master: Main):
+    def __init__(self, master: Main, n_question: int ):
         """Construct an integer variable.
 
         MASTER can be given as master widget.
@@ -739,18 +724,18 @@ class IntVar(StringVar):
         If NAME matches an existing variable and VALUE is omitted
         then the existing value is retained.
         """
-        StringVar.__init__(self, master)
-        self.NUMBER_OF_QUESTIONS = master.competition.NUMBER_OF_QUESTIONS
+        Variable.__init__(self, master)
+        self.n_question = n_question
 
     def get(self) -> int:
         """Return the value of the variable as an integer."""
         try:
             value = int(self._tk.globalgetvar(self._name))
-            return value if 0 < value <= self.NUMBER_OF_QUESTIONS else None
+            return value if 0 < value <= self.n_question else None
         except ValueError:
             return None
 
-class DoubleVar(StringVar):
+class DoubleVar(Variable):
     """Value holder for float variables."""
 
     def __init__(self, master: Main):
@@ -763,7 +748,7 @@ class DoubleVar(StringVar):
         If NAME matches an existing variable and VALUE is omitted
         then the existing value is retained.
         """
-        StringVar.__init__(self, master)
+        Variable.__init__(self, master)
 
     def get(self) -> float:
         """Return the value of the variable as an integer."""
@@ -773,11 +758,11 @@ class DoubleVar(StringVar):
             return None
 
 class ScrollableFrame(Frame):
-    def __init__(self, container, *args, **kwargs):
-        super().__init__(container, *args, **kwargs)
-        canvas = Canvas(self)
+    def __init__(self, container, **kwargs):
+        super().__init__(container, **kwargs)
+        canvas = Canvas(self, **kwargs)
         scrollbar = Scrollbar(self, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = Frame(canvas)
+        self.scrollable_frame = Frame(canvas, **kwargs)
 
         self.scrollable_frame.bind(
             "<Configure>",
