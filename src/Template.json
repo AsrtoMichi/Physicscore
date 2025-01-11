@@ -4,8 +4,9 @@
 
 	"Name" : "Test",
 
-	"Teams": ["Charlie", "David", "Eric", "1", "2", "3"],
+	"Teams": ["Charlie", "David", "Eric", ["1", 100], "2", "3"],
 	"Teams_ghost" : ["Ada"],
+	"Teams_format": ["Name", ["Name", "Handicap as int value"]],
 
 	"Timers" : {
 		"time" : 1,

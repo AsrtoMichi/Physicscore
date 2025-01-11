@@ -204,7 +204,7 @@ class Competition_Frame(Frame):
         OptionMenu(
             self.arbiterGUI,
             self.team_var,
-            *data["Teams"],
+            *self.competition.NAMES_TEAMS,
         ).pack()
 
         Label(self.arbiterGUI, text="Question number:").pack()
@@ -662,7 +662,7 @@ class Graph_Frame(Frame):
 class Competition:
     def __init__(
         self,
-        teams: Tuple[str],
+        teams: Tuple[str | Tuple[str, int]],
         questions_data: Tuple[Tuple[float, float]],
         Bp: int,
         Dp: int,
@@ -670,7 +670,10 @@ class Competition:
         A: int,
         h: int,
     ):
-        self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = teams, len(teams)
+        def unpack_team_nh(data):
+            return data, 0 if isinstance(data, str) else data
+
+        self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = tuple(unpack_team_nh(team_nh)[0] for team_nh in teams), len(teams)
 
         self.questions_data = {
             question: {
@@ -686,11 +689,11 @@ class Competition:
         self.NUMBER_OF_QUESTIONS = len(questions_data)
         self.NUMBER_OF_QUESTIONS_RANGE_1 = range(1, self.NUMBER_OF_QUESTIONS + 1)
 
-        self.Bp, self.Dp, self.E, self.A, self.h = Bp, Dp, E, A, h
+        self.Bp, self.Dp, self.E, self.A, self.h = Bp, Dp, E, A, h            
 
         self.teams_data = {
-            team: {
-                "bonus": 0,
+            unpack_team_nh(team_nh)[0]: {
+                "bonus": unpack_team_nh(team_nh)[1],
                 "jolly": None,
                 "active": False,
                 **{
@@ -698,7 +701,7 @@ class Competition:
                     for question in self.NUMBER_OF_QUESTIONS_RANGE_1
                 },
             }
-            for team in self.NAMES_TEAMS
+            for team_nh in teams
         }
 
     def submit_answer(self, team: str, question: int, answer: float) -> bool:
