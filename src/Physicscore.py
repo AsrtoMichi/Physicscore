@@ -37,7 +37,12 @@ class Main(Tk):
         super().__init__()
 
 
-        dir_ico = join(dirname(__file__), 'MathScore.ico')
+        Label(self, text="v0.1.0.0\nCopyright (C) 2024 AsrtoMichi", justify='right').pack(
+            side="bottom", anchor="e", padx=8, pady=8
+        )
+
+
+        dir_ico = join(dirname(__file__), "MathScore.ico")
         if isdir(dir_ico):
             self.iconbitmap(default=dir_ico)
 
