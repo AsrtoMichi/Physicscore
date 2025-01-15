@@ -14,7 +14,7 @@ Physicscore uses a JSON file to configure the competitions, teams, parameters, a
 {
 	"Name" : "Test",
 
-	"Teams": ["Charlie", "David", "Eric", "1", "2", "3"],
+	"Teams": ["Charlie", "David", "Eric", ["1", 0], "2", "3"],
 	"Teams_ghost" : ["Ada"],
 	"Teams_format": ["Name", ["Name", "Handicap as int value"]],
 
@@ -67,7 +67,7 @@ Physicscore uses a JSON file to configure the competitions, teams, parameters, a
 ### JSON File Details
 
 - **Name**: Specifies the name of the competition.
-- **Teams**: List of participating teams with their handicap (can be omitted if equal to 0)
+- **Teams**: List of participating teams with their handicap (can be omitted if equal to 0, es: [name_team, handicap])
 - **Teams_ghost**: Ghost teams participating in the competition.
 - **Timers**: Configure the competition time and the time for jokers.
 - **Parameters**: Competition parameters using Python notation.
