@@ -36,7 +36,7 @@ class Main(Tk):
     def __init__(self):
         super().__init__()
 
-        Label(self, text="v0.1.0.0\nCopyright (C) 2024 AsrtoMichi", justify='right').pack(
+        Label(self, text="v0.1.1.0\nCopyright (C) 2024 AsrtoMichi", justify='right').pack(
             side="bottom", anchor="e", padx=8, pady=8
         )
 
