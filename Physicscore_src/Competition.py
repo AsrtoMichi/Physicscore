@@ -29,6 +29,7 @@ class Competition:
             for question, question_data in enumerate(data_solutions, 1)
         }
         self.fulled = 0
+        self.questions_penalized = data['Questions_penalized']
 
         self.NUMBER_OF_QUESTIONS = len(data_solutions)
         self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
@@ -148,7 +149,7 @@ class Competition:
         return (
             list_point_team['sts']
             * (self.value_question(question) + list_point_team['bonus'])
-            - list_point_team['err'] * self.E
+            - list_point_team['err'] * self.E * ((question in self.questions_penalized) +1)
         ) * ((self.teams_data[team]['jolly'] == question) + 1)
 
     def total_points_team(self, team: str) -> int:

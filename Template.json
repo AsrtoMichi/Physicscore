@@ -30,6 +30,8 @@
 		[4.0, 1.0]
 	],
 
+	"Questions_penalized": [1,2],
+
 	"Solution_format": ["answer", "relative error"],
 
 
