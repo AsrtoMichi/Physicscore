@@ -1,21 +1,23 @@
 from math import e, sqrt
 from typing import Tuple
 
+
 class Competition:
     def __init__(
         self,
-        teams: Tuple[str | Tuple[str, int]],
-        questions_data: Tuple[Tuple[float, float]],
-        Bp: int,
-        Dp: int,
-        E: int,
-        A: int,
-        h: int,
+        data: dict,
+        teams: Tuple[str | Tuple[str, int]
+                     ]
+
     ):
-        def unpack_team_nh(data):
+        
+        def unpack_team_nh(data) -> Tuple[str, int]:
             return (data, 0) if isinstance(data, str) else data
 
-        self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = tuple(unpack_team_nh(team_nh)[0] for team_nh in teams), len(teams)
+        self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = tuple(
+            unpack_team_nh(team_nh)[0] for team_nh in teams), len(teams)
+        
+        data_solutions: Tuple[int, float] = data['Solutions']
 
         self.questions_data = {
             question: {
@@ -24,14 +26,19 @@ class Competition:
                 'max': 1 + question_data[1] / 100,
                 'ca': 0,
             }
-            for question, question_data in enumerate(questions_data, 1)
+            for question, question_data in enumerate(data_solutions, 1)
         }
         self.fulled = 0
 
-        self.NUMBER_OF_QUESTIONS = len(questions_data)
-        self.NUMBER_OF_QUESTIONS_RANGE_1 = range(1, self.NUMBER_OF_QUESTIONS + 1)
+        self.NUMBER_OF_QUESTIONS = len(data_solutions)
+        self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
+            1, self.NUMBER_OF_QUESTIONS + 1)
 
-        self.Bp, self.Dp, self.E, self.A, self.h = Bp, Dp, E, A, h
+        self.Bp: int = data['Patameters']['Bp']
+        self.Dp: int = data['Patameters']['Dp']
+        self.E: int =  data['Patameters']['E']
+        self.A: int = data['Patameters']['A']
+        self.h: int = data['Patameters']['h']
 
         self.teams_data = {
             unpack_team_nh(team_nh)[0]: {
@@ -45,12 +52,11 @@ class Competition:
             }
             for team_nh in teams
         }
-        
 
     def submit_answer(self, team: str, question: int, answer: float) -> bool:
-        '''
+        """
         The mehtod to submit answers
-        '''
+        """
 
         if team and question and answer and not self.teams_data[team][question]['sts']:
             data_point_team = self.teams_data[team][question]
@@ -90,9 +96,9 @@ class Competition:
             return True
 
     def submit_jolly(self, team: str, question: int) -> bool:
-        '''
+        """
         The method to submit jolly
-        '''
+        """
 
         # check if other jolly are already been given
         if team and question and not self.teams_data[team]['jolly']:
@@ -104,20 +110,21 @@ class Competition:
         return int(p * e ** (-4 * (k - 1) / m))
 
     def Act_t(self) -> int:
-        '''
+        """
         Retun the number of active teams
-        '''
+        """
 
         return max(
             self._NUMBER_OF_TEAMS / 2,
-            [self.teams_data[team]['active'] for team in self.NAMES_TEAMS].count(True),
+            [self.teams_data[team]['active']
+                for team in self.NAMES_TEAMS].count(True),
             5,
         )
 
     def value_question(self, question: int) -> int:
-        '''
+        """
         Return the value of answer
-        '''
+        """
 
         return self.Bp + self.g(
             self.Dp
@@ -132,9 +139,9 @@ class Competition:
         )
 
     def value_question_x_squad(self, team: str, question: int) -> int:
-        '''
+        """
         Return the points made by a team in a question
-        '''
+        """
 
         list_point_team = self.teams_data[team][question]
 
@@ -145,9 +152,9 @@ class Competition:
         ) * ((self.teams_data[team]['jolly'] == question) + 1)
 
     def total_points_team(self, team: str) -> int:
-        '''
+        """
         Return the points of a team
-        '''
+        """
         return (
             sum(
                 self.value_question_x_squad(team, question)

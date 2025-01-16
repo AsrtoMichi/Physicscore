@@ -1,9 +1,11 @@
 from json import dump
 from tkinter.filedialog import asksaveasfilename
 from tkinter import Tk, Toplevel, Entry, Variable, Frame, Label, OptionMenu, Button
+from typing import Tuple
 from .Var import IntVar, DoubleVar
 from .Competition import Competition
 from .PointsScrollFrame import PointsScrollFrame
+
 
 class CompetitionFrame(Frame):
     def __init__(self, master: Tk, data: dict):
@@ -13,16 +15,7 @@ class CompetitionFrame(Frame):
 
         self.data = data
 
-
-        self.competition = Competition(
-            data['Teams'] + data['Teams_ghost'],
-            data['Solutions'],
-            data['Patameters']['Bp'],
-            data['Patameters']['Dp'],
-            data['Patameters']['E'],
-            data['Patameters']['A'],
-            data['Patameters']['h'],
-        )
+        self.competition = Competition(data,  data['Teams'] + data['Teams_ghost'])
 
         self.timer: int = data['Timers']['time'] * 60
 
@@ -37,59 +30,16 @@ class CompetitionFrame(Frame):
         self.timer_label.pack()
 
         self.points_scroll_frame = PointsScrollFrame(self, self.competition)
-        
-        self.arbiterGUI = Toplevel(self)
 
-        self.arbiterGUI.title('Reciver')
-        self.arbiterGUI.geometry('250x290')
-        self.arbiterGUI.resizable(False, False)
+        self.reciver = Reciver(self)
 
-        Label(self.arbiterGUI, text='Team:').pack()
-        self.team_var = Variable(self)
-        OptionMenu(
-            self.arbiterGUI,
-            self.team_var,
-            *self.competition.NAMES_TEAMS,
-        ).pack()
-
-        Label(self.arbiterGUI, text='Question number:').pack()
-        self.question_var = IntVar(self, self.competition.NUMBER_OF_QUESTIONS)
-        Entry(self.arbiterGUI, textvariable=self.question_var).pack()
-
-        Label(self.arbiterGUI, text='Answer:').pack()
-        self.answer_var = DoubleVar(self)
-        Entry(self.arbiterGUI, textvariable=self.answer_var).pack()
-
-        self.jolly_button = Button(
-            self.arbiterGUI,
-            text='Submit Jolly',
-            command=self.submit_jolly,
-            state='disabled',
-        )
-        self.jolly_button.pack(pady=15)
-
-        self.answer_button = Button(
-            self.arbiterGUI,
-            text='Submit Answer',
-            command=self.submit_answer,
-            state='disabled',
-        )
-        self.answer_button.pack()
-
-        Label(self.arbiterGUI, text='Copyright (C) 2024 AsrtoMichi').pack(
-            side='bottom', anchor='e', padx=8, pady=8
-        )
-
-        self.arbiterGUI.protocol('WM_DELETE_WINDOW', lambda: None)
-
-        self.jolly_button.configure(state='normal')
-        self.answer_button.configure(state='normal')
-        self.arbiterGUI.bind('<Return>', lambda key: self.submit_answer())
-        self.arbiterGUI.bind('<Shift-Return>', lambda key: self.submit_jolly())
+        self.reciver.jolly_button.configure(state='normal')
+        self.reciver.answer_button.configure(state='normal')
+        self.reciver.bind('<Return>', lambda key: self.submit_answer())
+        self.reciver.bind('<Shift-Return>', lambda key: self.submit_jolly())
 
         self.points_scroll_frame.pack()
         self.points_scroll_frame.update_entry()
-        self.clean()
 
         TOTAL_TIME = self.timer
 
@@ -110,39 +60,42 @@ class CompetitionFrame(Frame):
 
         for jolly in data['Actions']['jokers']:
             if jolly[0] in data['Teams_ghost']:
-                master.after(jolly[2] * 1000, self.competition.submit_jolly, *jolly[:2])
+                master.after(jolly[2] * 1000,
+                             self.competition.submit_jolly, *jolly[:2])
 
         def stop_jolly():
-            '''
+            """
             Block the ability to send jolly
-            '''
-            self.jolly_button.destroy()
-            self.arbiterGUI.unbind('<Shift-Return>')
+            """
+            self.reciver.jolly_button.destroy()
+            self.reciver.unbind('<Shift-Return>')
 
         master.after(data['Timers']['time_for_jolly'] * 60000, stop_jolly)
 
         # ----------------- Hinding points ----------------- #
 
-        master.after((TOTAL_TIME - 30) * 1000, self.points_scroll_frame.pack_forget)
+        master.after((TOTAL_TIME - 30) * 1000,
+                     self.points_scroll_frame.pack_forget)
 
         # ------------------- Conclusion ------------------- #
 
         master.after(TOTAL_TIME * 1000, self.hide_rancking)
 
     def hide_rancking(self):
-        '''
+        """
         Block the ability to send answer
-        '''
+        """
         self.pack_forget()
         self.master.button1.pack()
         self.pack()
-        self.master.button1.configure(text='Show ranking', command=self.show_ranking)
+        self.master.button1.configure(
+            text='Show ranking', command=self.show_ranking)
         self.timer_label.destroy()
 
     def show_ranking(self):
-        '''
+        """
         Show the final ranking and configure the button1 button to save data
-        '''
+        """
 
         self.master.button1.configure(
             text='Save data',
@@ -201,42 +154,84 @@ class CompetitionFrame(Frame):
         self.arbiterGUI.destroy()
 
     def update_timer(self):
-        '''
+        """
         Update the clock label
-        '''
+        """
 
         self.timer -= 1
         self.timer_label.configure(
             text=f'Time left: {self.timer // 3600:02d}: {(self.timer % 3600) // 60:02d}: {self.timer % 60:02d}'
         )
- 
+
     def submit_answer(self):
-        team, question, answer = (
-            self.team_var.get(),
-            self.question_var.get(),
-            self.answer_var.get(),
-        )
+        team, question, answer = self.reciver.get()
 
         if self.competition.submit_answer(team, question, answer):
             self.points_scroll_frame.update_entry()
             self._answer.append((team, question, answer, self.timer))
 
-        self.clean()
-
     def submit_jolly(self):
-        team, question = self.team_var.get(), self.question_var.get()
+        team, question, _ = self.reciver.get()
 
         if self.competition.submit_jolly(team, question):
             self._jolly.append((team, question, self.timer))
 
             self.points_scroll_frame.update_entry()
 
-        self.clean()
 
-    def clean(self):
-        '''
-        Reset value of entryes
-        '''
+class Reciver(Toplevel):
+    def __init__(self, master: CompetitionFrame):
+
+        self.competition = master.competition
+
+        super().__init__(master)
+        self.title('Reciver')
+        self.geometry('250x290')
+        self.resizable(False, False)
+
+        Label(self, text='Team:').pack()
+        self.team_var = Variable(self)
+        OptionMenu(
+            self,
+            self.team_var,
+            *self.competition.NAMES_TEAMS,
+        ).pack()
+
+        Label(self, text='Question number:').pack()
+        self.question_var = IntVar(self, self.competition.NUMBER_OF_QUESTIONS)
+        Entry(self, textvariable=self.question_var).pack()
+
+        Label(self, text='Answer:').pack()
+        self.answer_var = DoubleVar(self)
+        Entry(self, textvariable=self.answer_var).pack()
+
+        self.jolly_button = Button(
+            self,
+            text='Submit Jolly',
+            command=master.submit_jolly,
+            state='disabled',
+        )
+        self.jolly_button.pack(pady=15)
+
+        self.answer_button = Button(
+            self,
+            text='Submit Answer',
+            command=master.submit_answer,
+            state='disabled',
+        )
+        self.answer_button.pack()
+
+        self.protocol('WM_DELETE_WINDOW', lambda: None)
+
+    def get(self) -> Tuple[str, int, float]:
+        """
+        Return values of entryes
+        Reset values of entryes
+        """
+        output = self.team_var.get(), self.question_var.get(), self.answer_var.get()
+
         self.team_var.set('')
         self.question_var.set('')
         self.answer_var.set('')
+
+        return output

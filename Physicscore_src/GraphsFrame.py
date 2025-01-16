@@ -6,21 +6,14 @@ from tkinter import Tk, Frame, Canvas, Label, BooleanVar, Checkbutton
 from .Competition import Competition
 from .ScrollableFrame import ScrollableFrame
 
+
 class GraphsFrame(Frame):
     def __init__(self, master: Tk, data: dict):
         super().__init__(master)
 
         master.title(data['Name'])
 
-        competition = Competition(
-            data['Actions']['teams'],
-            data['Solutions'],
-            data['Patameters']['Bp'],
-            data['Patameters']['Dp'],
-            data['Patameters']['E'],
-            data['Patameters']['A'],
-            data['Patameters']['h'],
-        )
+        competition = Competition(data, data['Actions']['teams'])
 
         TOTAL_TIME = data['Timers']['time'] * 60
 
@@ -31,7 +24,8 @@ class GraphsFrame(Frame):
 
         def register_data():
             for team in competition.NAMES_TEAMS:
-                data_teams[team].append((timer, competition.total_points_team(team)))
+                data_teams[team].append(
+                    (timer, competition.total_points_team(team)))
 
             for question in competition.NUMBER_OF_QUESTIONS_RANGE_1:
                 data_question[question].append(
@@ -57,7 +51,6 @@ class GraphsFrame(Frame):
 
         Graph_Frame(self, data_teams, TOTAL_TIME).pack()
         Graph_Frame(self, data_question, TOTAL_TIME).pack(padx=20)
-
 
 
 class Graph_Frame(Frame):
@@ -136,7 +129,8 @@ class Graph_Frame(Frame):
             for key in keys:
                 for element in canvas.find_withtag(f'tag_{key}'):
                     canvas.itemconfigure(
-                        element, state='normal' if vars[key].get() else 'hidden'
+                        element, state='normal' if vars[key].get(
+                        ) else 'hidden'
                     )
 
         for key in keys:
@@ -183,20 +177,24 @@ class Graph_Frame(Frame):
         u_y_a = y_a_l / max_a_y
 
         # Draw the x and y axes
-        canvas.create_line(x_o, y_o, x_o + x_a_l, y_o, arrow='last', tags='x-axis')
-        canvas.create_line(x_o, y_o, x_o, y_o - y_a_l, arrow='last', tags='y-axis')
+        canvas.create_line(x_o, y_o, x_o + x_a_l, y_o,
+                           arrow='last', tags='x-axis')
+        canvas.create_line(x_o, y_o, x_o, y_o - y_a_l,
+                           arrow='last', tags='y-axis')
 
         # Label the axes
         canvas.create_text(
             x_o + x_a_l / 2, canvas.winfo_reqheight() - 15, text='Time', tags='time'
         )
-        canvas.create_text(15, y_o - y_a_l / 2, text='Value', angle=90, tags='value')
+        canvas.create_text(15, y_o - y_a_l / 2, text='Value',
+                           angle=90, tags='value')
 
         # Add grid lines and labels
         for i in range(1, x_a_i_n + 1):
             x = x_o + i * x_a_i_d
             canvas.create_line(x, y_o, x, y_o - y_a_i_d * y_a_i_n, dash=(2, 2))
-            canvas.create_text(x, y_o + 10, text=str((max_x - i * x_a_d_i) / 60))
+            canvas.create_text(
+                x, y_o + 10, text=str((max_x - i * x_a_d_i) / 60))
         canvas.create_text(x_o, y_o + 10, text=str(max_x / 60))
 
         for i in range(1, y_a_i_n + 1):
@@ -211,7 +209,8 @@ class Graph_Frame(Frame):
                 y1_2_coord = y_o - points[point_index][1] * u_y_a
                 x2_3_coord = (max_x - points[point_index + 1][0]) * u_x_a + x_o
                 canvas.create_line(
-                    ((max_x - points[point_index][0]) * u_x_a + x_o, y1_2_coord),
+                    ((max_x - points[point_index][0])
+                     * u_x_a + x_o, y1_2_coord),
                     (x2_3_coord, y1_2_coord),
                     tags=line_tag,
                     width=2,
