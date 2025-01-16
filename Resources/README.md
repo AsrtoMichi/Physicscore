@@ -42,6 +42,7 @@ Physicscore uses a JSON file to configure the competitions, teams, parameters, a
 
 	"Solution_format": ["answer", "relative error"],
 
+	"Questions_penalized": [1,2],
 
 	"Actions" : {
 		"teams" : ["Ada", "Bob"],
@@ -72,6 +73,7 @@ Physicscore uses a JSON file to configure the competitions, teams, parameters, a
 - **Timers**: Configure the competition time and the time for jokers.
 - **Parameters**: Competition parameters using Python notation.
 - **Solutions**: Expected solutions for the questions.
+- **Questions_penalized**: For this question E is the duble.
 - **Actions**:
   - **teams**: List of teams that take actions.
   - **jokers**: Details of joker actions (team, question number, score).
