@@ -1,12 +1,11 @@
-from tkinter import Label, Variable, Entry
+from tkinter import Label, Variable, Entry, Frame
 from .Competition import Competition
 from .ScrollableFrame import ScrollableFrame
-from .CompetitionFrame import Competition_Frame
 
 
 class PointsScrollFrame(ScrollableFrame):
 
-    def __init__(self, master: Competition_Frame, competition: Competition):
+    def __init__(self, master: Frame, competition: Competition):
 
         super().__init__(master)
 

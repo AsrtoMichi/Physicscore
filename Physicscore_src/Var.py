@@ -1,12 +1,11 @@
 
-from tkinter import Variable
+from tkinter import Tk, Variable
 
-from .Physicscore import Main
 
 class IntVar(Variable):
     '''Value holder for integer variables.'''
 
-    def __init__(self, master: Main, n_question: int):
+    def __init__(self, master: Tk, n_question: int):
         '''Construct an integer variable.
 
         MASTER can be given as master widget.
@@ -16,7 +15,7 @@ class IntVar(Variable):
         If NAME matches an existing variable and VALUE is omitted
         then the existing value is retained.
         '''
-        super().__init__(self, master)
+        super().__init__(master)
         self.n_question = n_question
 
     def get(self) -> int:
@@ -31,7 +30,7 @@ class IntVar(Variable):
 class DoubleVar(Variable):
     '''Value holder for float variables.'''
 
-    def __init__(self, master: Main):
+    def __init__(self, master: Tk):
         '''Construct a float variable.
 
         MASTER can be given as master widget.
@@ -41,7 +40,7 @@ class DoubleVar(Variable):
         If NAME matches an existing variable and VALUE is omitted
         then the existing value is retained.
         '''
-        super().__init__(self, master)
+        super().__init__(master)
 
     def get(self) -> float:
         '''Return the value of the variable as an integer.'''
