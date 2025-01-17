@@ -14,32 +14,27 @@ class CompetitionFrame(Frame):
         master.title(data['Name'])
 
         self.data = data
-
-        self.competition = Competition(data,  data['Teams'] + data['Teams_ghost'])
-
-        self.timer: int = data['Timers']['time'] * 60
-
+        self.competition = Competition(
+            data,  data['Teams'] + data['Teams_ghost'])
         self._jolly, self._answer = [], []
 
+        self.timer: int = data['Timers']['time'] * 60
         self.timer_label = Label(
             self,
             font=('Helvetica', 18, 'bold'),
             text=f'Time left: {self.timer // 3600:02d}:{(self.timer % 3600) // 60:02d}:00',
         )
-
         self.timer_label.pack()
 
         self.points_scroll_frame = PointsScrollFrame(self, self.competition)
+        self.points_scroll_frame.pack(fill='both', expand=True)
+        self.points_scroll_frame.update_entry()
 
         self.reciver = Reciver(self)
-
         self.reciver.jolly_button.configure(state='normal')
         self.reciver.answer_button.configure(state='normal')
         self.reciver.bind('<Return>', lambda key: self.submit_answer())
         self.reciver.bind('<Shift-Return>', lambda key: self.submit_jolly())
-
-        self.points_scroll_frame.pack()
-        self.points_scroll_frame.update_entry()
 
         TOTAL_TIME = self.timer
 

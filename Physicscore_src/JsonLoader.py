@@ -5,7 +5,7 @@ from tkinter import Tk
 
 class JsonLoader():
     @staticmethod
-    def json_load(master: Tk):
+    def json_load(master: Tk = None):
         return load(
             open(
                 askopenfilename(

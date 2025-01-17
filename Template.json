@@ -46,7 +46,9 @@
 		"answers" : [
 			["Ada", 1, 1.0, 20],
 			["Bob", 3, 3.0, 15],
-			["Ada", 2, 2.0, 40]
+			["Ada", 2, 2.0, 40],
+			["Bob", 2, 2.01, 30],
+			["Bob", 1, 2.01, 45]
 		],
 
 		"answer_format" : ["team", "question", "answer", "time in seconds"]

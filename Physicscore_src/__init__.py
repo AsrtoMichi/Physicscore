@@ -90,13 +90,13 @@ Contact me on discord.com, my username is "lorito_39408".""".replace(' '*60, '\n
             self.button1.config(text="Start", command=self.start_competiton)
             self.button2.pack_forget()
 
-        except FileNotFoundError:
+        except (FileNotFoundError, TypeError):
             self.show_menù()
 
     def start_competiton(self):
         self.button1.pack_forget()
         self.frame = CompetitionFrame(self, self.data)
-        self.frame.pack()
+        self.frame.pack(fill='both', expand=True)
 
         del self.data
 
@@ -105,6 +105,6 @@ Contact me on discord.com, my username is "lorito_39408".""".replace(' '*60, '\n
             self.button1.config(text="Menù", command=self.destroy_frame)
             self.button2.pack_forget()
             self.frame = GraphsFrame(self, JsonLoader.json_load(self))
-            self.frame.pack()
-        except FileNotFoundError:
+            self.frame.pack(expand=True, fill='both')
+        except (FileNotFoundError, TypeError):
             self.show_menù()

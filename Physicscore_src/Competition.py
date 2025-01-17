@@ -10,14 +10,12 @@ class Competition:
                      ]
 
     ):
-        
+
         def unpack_team_nh(data) -> Tuple[str, int]:
             return (data, 0) if isinstance(data, str) else data
 
         self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = tuple(
             unpack_team_nh(team_nh)[0] for team_nh in teams), len(teams)
-        
-        data_solutions: Tuple[int, float] = data['Solutions']
 
         self.questions_data = {
             question: {
@@ -26,17 +24,17 @@ class Competition:
                 'max': 1 + question_data[1] / 100,
                 'ca': 0,
             }
-            for question, question_data in enumerate(data_solutions, 1)
+            for question, question_data in enumerate(data['Solutions'], 1)
         }
         self.fulled = 0
 
-        self.NUMBER_OF_QUESTIONS = len(data_solutions)
+        self.NUMBER_OF_QUESTIONS = len(self.questions_data)
         self.NUMBER_OF_QUESTIONS_RANGE_1 = range(
             1, self.NUMBER_OF_QUESTIONS + 1)
 
         self.Bp: int = data['Patameters']['Bp']
         self.Dp: int = data['Patameters']['Dp']
-        self.E: int =  data['Patameters']['E']
+        self.E: int = data['Patameters']['E']
         self.A: int = data['Patameters']['A']
         self.h: int = data['Patameters']['h']
 
@@ -58,18 +56,18 @@ class Competition:
         The mehtod to submit answers
         """
 
-        if team and question and answer and not self.teams_data[team][question]['sts']:
+        if team and question and answer != None and not self.teams_data[team][question]['sts']:
             data_point_team = self.teams_data[team][question]
             data_question = self.questions_data[question]
 
             self.teams_data[team]['active'] = True
 
             # if correct
-            if (
-                data_question['min']
-                <= answer / data_question['avg']
-                <= data_question['max']
-            ):
+            if ((answer == 0 and data_question['avg'] == 0) or (
+                    data_question['min']
+                    <= answer / data_question['avg']
+                    <= data_question['max'])
+                    ):
                 data_question['ca'] += 1
 
                 data_point_team['sts'], data_point_team['bonus'] = True, self.g(
@@ -102,7 +100,7 @@ class Competition:
 
         # check if other jolly are already been given
         if team and question and not self.teams_data[team]['jolly']:
-            self.teams_data[team]['jolly'] = True
+            self.teams_data[team]['jolly'] = question
 
             return True
 
