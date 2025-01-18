@@ -50,6 +50,9 @@ class CompetitionFrame(Frame):
                 master.after(
                     answer[3] * 1000, self.competition.submit_answer, *answer[:3]
                 )
+                master.after(
+                    answer[3] * 1000+100, self.points_scroll_frame.update_entry
+                )
 
         # ------------------- Jolly ------------------- #
 
@@ -57,6 +60,9 @@ class CompetitionFrame(Frame):
             if jolly[0] in data['Teams_ghost']:
                 master.after(jolly[2] * 1000,
                              self.competition.submit_jolly, *jolly[:2])
+                master.after(
+                    jolly[2] * 1000+100, self.points_scroll_frame.update_entry
+                )
 
         def stop_jolly():
             """
@@ -82,10 +88,12 @@ class CompetitionFrame(Frame):
         """
         self.pack_forget()
         self.master.button1.pack()
-        self.pack()
         self.master.button1.configure(
             text='Show ranking', command=self.show_ranking)
+        self.pack(fill='both', expand=True)
+        
         self.timer_label.destroy()
+        self.points_scroll_frame.update_entry()
 
     def show_ranking(self):
         """
@@ -130,6 +138,7 @@ class CompetitionFrame(Frame):
                 open(
                     asksaveasfilename(
                         master=self,
+                        defaultextension='.json',
                         filetypes=[('JavaScript Object Notation', '*.json')],
                         title='Save date',
                     ),
@@ -141,12 +150,13 @@ class CompetitionFrame(Frame):
         self.master.button2.configure(
             text='Main menù', command=self.master.destroy_frame
         )
+
         self.pack_forget()
         self.master.button2.pack()
-        self.pack()
+        self.pack(fill='both', expand=True)
 
-        self.points_scroll_frame.pack()
-        self.arbiterGUI.destroy()
+        self.points_scroll_frame.pack(fill='both', expand=True)
+        self.reciver.destroy()
 
     def update_timer(self):
         """
@@ -169,9 +179,8 @@ class CompetitionFrame(Frame):
         team, question, _ = self.reciver.get()
 
         if self.competition.submit_jolly(team, question):
-            self._jolly.append((team, question, self.timer))
-
             self.points_scroll_frame.update_entry()
+            self._jolly.append((team, question, self.timer))   
 
 
 class Reciver(Toplevel):

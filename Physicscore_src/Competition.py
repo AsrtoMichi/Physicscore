@@ -56,7 +56,8 @@ class Competition:
         The mehtod to submit answers
         """
 
-        if team and question and answer != None and not self.teams_data[team][question]['sts']:
+        if team and question and (answer != None) and not self.teams_data[team][question]['sts']:
+
             data_point_team = self.teams_data[team][question]
             data_question = self.questions_data[question]
 
