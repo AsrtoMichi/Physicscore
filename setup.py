@@ -30,8 +30,8 @@ if __name__ == "__main__":
         ],
         entry_points={
             "console_scripts": [
-                "physicscore=Physicscore.Physicscore:main",
-                "reportgen=Physicscore.ReportGenerator:main",
+                "physicscore=Physicscore:physicscore",
+                "reportgen=Physicscore:reportgen",
             ],
         },
         package_data={

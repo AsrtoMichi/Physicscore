@@ -3,7 +3,7 @@
 # Installation
 
 To install the app:
-1. Clone the source code via git: ```gh repo clone AsrtoMichi/Physicscore```
+1. Clone the source code using git: ```git clone AsrtoMichi/Physicscore```
 2. Navigate to the directory: ```cd Physicscore```
 3. Install the package using: ```pip install .```
 

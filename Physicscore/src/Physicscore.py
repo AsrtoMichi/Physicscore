@@ -22,10 +22,23 @@ class Physicscore(Tk):
             text="About",
             command=lambda: showinfo(
                 "License",
-                open(
-                    join(dirname(dirname(dirname(__file__))), "LICENSE"),
-                    encoding="utf-8"
-                ).read(),
+                """Physicscore, an app for physique competition in teams.
+Copyright (C) 2024  AsrtoMichi
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Contact me by email at a asrtomichi@gmail.com.""",
                 master=self
             )
         ).pack(side='bottom', anchor='e', padx=8, pady=8)
