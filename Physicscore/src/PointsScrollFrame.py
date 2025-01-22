@@ -2,11 +2,23 @@ from tkinter import Label, Variable, Entry, Frame
 from .Competition import Competition
 from .ScrollableFrame import ScrollableFrame
 
-
 class PointsScrollFrame(ScrollableFrame):
+    """
+    A frame that displays and updates the points for each team and question in a scrollable format.
+    
+    Attributes:
+    master (Frame): The master frame containing the points.
+    competition (Competition): The competition object containing the data.
+    """
 
     def __init__(self, master: Frame, competition: Competition):
-
+        """
+        Initializes the PointsScrollFrame with master and competition.
+        
+        Parameters:
+        master (Frame): The master frame containing the points.
+        competition (Competition): The competition object containing the data.
+        """
         super().__init__(master)
 
         self.competition = competition
@@ -78,10 +90,9 @@ class PointsScrollFrame(ScrollableFrame):
             self.entry_questiox_a_n_team.append(entry_list)
 
     def update_entry(self):
-        '''
-        Update values in points
-        '''
-
+        """
+        Updates the values in the points entries.
+        """
         # Create value labels for each question
         for question in self.competition.NUMBER_OF_QUESTIONS_RANGE_1:
             self.var_question[question].set(self.competition.value_question(question))
@@ -95,7 +106,6 @@ class PointsScrollFrame(ScrollableFrame):
             )
         ):
             self.var_start_row[row][0].set(team)
-
             self.var_start_row[row][1].set(self.competition.total_points_team(team))
 
             for question in self.competition.NUMBER_OF_QUESTIONS_RANGE_1:

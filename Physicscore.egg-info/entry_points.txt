@@ -1,0 +1,3 @@
+[console_scripts]
+physicscore = Physicscore.Physicscore:main
+reportgen = Physicscore.ReportGenerator:main
