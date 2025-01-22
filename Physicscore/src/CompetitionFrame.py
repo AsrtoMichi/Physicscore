@@ -1,102 +1,102 @@
 from json import dump
 from tkinter.filedialog import asksaveasfilename
-from tkinter import Tk, Toplevel, Entry, Variable, Frame, Label, OptionMenu, Button
+from tkinter import Tk, Toplevel, Entry, Frame, Label, OptionMenu, Button
 from typing import Tuple
-from .Var import IntVar, DoubleVar
+from .Var import IntVar, DoubleVar, Variable
 from .Competition import Competition
 from .PointsScrollFrame import PointsScrollFrame
 
-
 class CompetitionFrame(Frame):
-    def __init__(self, master: Tk, data: dict):
-        super().__init__(master)
+    """
+    A frame that manages and displays a team-based physics competition.
+    
+    Attributes:
+    master (Tk): The master tkinter window.
+    data (dict): Dictionary containing competition data.
+    """
 
+    def __init__(self, master: Tk, data: dict):
+        """
+        Initializes the CompetitionFrame with master and data.
+        
+        Parameters:
+        master (Tk): The master tkinter window.
+        data (dict): Dictionary containing competition data.
+        """
+        super().__init__(master)
         master.title(data['Name'])
 
         self.data = data
-
-        self.competition = Competition(data,  data['Teams'] + data['Teams_ghost'])
-
-        self.timer: int = data['Timers']['time'] * 60
-
+        self.competition = Competition(data, data['Teams'] + data['Teams_ghost'])
         self._jolly, self._answer = [], []
 
+        self.timer: int = data['Timers']['time'] * 60
         self.timer_label = Label(
             self,
             font=('Helvetica', 18, 'bold'),
             text=f'Time left: {self.timer // 3600:02d}:{(self.timer % 3600) // 60:02d}:00',
         )
-
         self.timer_label.pack()
 
         self.points_scroll_frame = PointsScrollFrame(self, self.competition)
+        self.points_scroll_frame.pack(fill='both', expand=True)
+        self.points_scroll_frame.update_entry()
 
         self.reciver = Reciver(self)
-
         self.reciver.jolly_button.configure(state='normal')
         self.reciver.answer_button.configure(state='normal')
         self.reciver.bind('<Return>', lambda key: self.submit_answer())
         self.reciver.bind('<Shift-Return>', lambda key: self.submit_jolly())
 
-        self.points_scroll_frame.pack()
-        self.points_scroll_frame.update_entry()
-
         TOTAL_TIME = self.timer
 
-        # ------------------- Timer ------------------- #
-
+        # Timer
         for time in range(1000, (TOTAL_TIME * 1000) + 1, 1000):
             master.after(time, self.update_timer)
 
-        # ------------------ Answers ------------------ #
-
+        # Answers
         for answer in data['Actions']['answers']:
             if answer[0] in data['Teams_ghost']:
-                master.after(
-                    answer[3] * 1000, self.competition.submit_answer, *answer[:3]
-                )
+                master.after(answer[3] * 1000, self.competition.submit_answer, *answer[:3])
+                master.after(answer[3] * 1000 + 100, self.points_scroll_frame.update_entry)
 
-        # ------------------- Jolly ------------------- #
-
+        # Jolly
         for jolly in data['Actions']['jokers']:
             if jolly[0] in data['Teams_ghost']:
-                master.after(jolly[2] * 1000,
-                             self.competition.submit_jolly, *jolly[:2])
+                master.after(jolly[2] * 1000, self.competition.submit_jolly, *jolly[:2])
+                master.after(jolly[2] * 1000 + 100, self.points_scroll_frame.update_entry)
 
         def stop_jolly():
             """
-            Block the ability to send jolly
+            Blocks the ability to submit jolly.
             """
             self.reciver.jolly_button.destroy()
             self.reciver.unbind('<Shift-Return>')
 
         master.after(data['Timers']['time_for_jolly'] * 60000, stop_jolly)
 
-        # ----------------- Hinding points ----------------- #
+        # Hiding points
+        master.after((TOTAL_TIME - 30) * 1000, self.points_scroll_frame.pack_forget)
 
-        master.after((TOTAL_TIME - 30) * 1000,
-                     self.points_scroll_frame.pack_forget)
+        # Conclusion
+        master.after(TOTAL_TIME * 1000, self.hide_ranking)
 
-        # ------------------- Conclusion ------------------- #
-
-        master.after(TOTAL_TIME * 1000, self.hide_rancking)
-
-    def hide_rancking(self):
+    def hide_ranking(self):
         """
-        Block the ability to send answer
+        Blocks the ability to submit answers and shows the final ranking.
         """
         self.pack_forget()
         self.master.button1.pack()
-        self.pack()
-        self.master.button1.configure(
-            text='Show ranking', command=self.show_ranking)
+        self.master.button1.configure(text='Show ranking', command=self.show_ranking)
+        self.pack(fill='both', expand=True)
+        
         self.timer_label.destroy()
+        self.points_scroll_frame.update_entry()
 
     def show_ranking(self):
         """
-        Show the final ranking and configure the button1 button to save data
+        Shows the final ranking and configures the button to save data.
         """
-
         self.master.button1.configure(
             text='Save data',
             command=lambda: dump(
@@ -124,46 +124,43 @@ class CompetitionFrame(Frame):
                         'jokers': self._jolly,
                         'jolly_format': ['team', 'question', 'time in seconds'],
                         'answers': self._answer,
-                        'answer_format': [
-                            'team',
-                            'question',
-                            'answer',
-                            'time in seconds',
-                        ],
+                        'answer_format': ['team', 'question', 'answer', 'time in seconds'],
                     },
                 },
                 open(
                     asksaveasfilename(
                         master=self,
+                        defaultextension='.json',
                         filetypes=[('JavaScript Object Notation', '*.json')],
-                        title='Save date',
+                        title='Save data',
                     ),
                     'w',
                 ),
             ),
         )
 
-        self.master.button2.configure(
-            text='Main menù', command=self.master.destroy_frame
-        )
+        self.master.button2.configure(text='Main menu', command=self.master.destroy_frame)
+
         self.pack_forget()
         self.master.button2.pack()
-        self.pack()
+        self.pack(fill='both', expand=True)
 
-        self.points_scroll_frame.pack()
-        self.arbiterGUI.destroy()
+        self.points_scroll_frame.pack(fill='both', expand=True)
+        self.reciver.destroy()
 
     def update_timer(self):
         """
-        Update the clock label
+        Updates the timer label.
         """
-
         self.timer -= 1
         self.timer_label.configure(
             text=f'Time left: {self.timer // 3600:02d}: {(self.timer % 3600) // 60:02d}: {self.timer % 60:02d}'
         )
 
     def submit_answer(self):
+        """
+        Submits an answer from the receiver and updates the points.
+        """
         team, question, answer = self.reciver.get()
 
         if self.competition.submit_answer(team, question, answer):
@@ -171,17 +168,30 @@ class CompetitionFrame(Frame):
             self._answer.append((team, question, answer, self.timer))
 
     def submit_jolly(self):
+        """
+        Submits a jolly from the receiver and updates the points.
+        """
         team, question, _ = self.reciver.get()
 
         if self.competition.submit_jolly(team, question):
-            self._jolly.append((team, question, self.timer))
-
             self.points_scroll_frame.update_entry()
-
+            self._jolly.append((team, question, self.timer))   
 
 class Reciver(Toplevel):
-    def __init__(self, master: CompetitionFrame):
+    """
+    A toplevel window for receiving answers and jokers.
+    
+    Attributes:
+    master (CompetitionFrame): The master frame containing the competition.
+    """
 
+    def __init__(self, master: CompetitionFrame):
+        """
+        Initializes the Reciver window with master.
+        
+        Parameters:
+        master (CompetitionFrame): The master frame containing the competition.
+        """
         self.competition = master.competition
 
         super().__init__(master)
@@ -191,11 +201,7 @@ class Reciver(Toplevel):
 
         Label(self, text='Team:').pack()
         self.team_var = Variable(self)
-        OptionMenu(
-            self,
-            self.team_var,
-            *self.competition.NAMES_TEAMS,
-        ).pack()
+        OptionMenu(self, self.team_var, *self.competition.NAMES_TEAMS).pack()
 
         Label(self, text='Question number:').pack()
         self.question_var = IntVar(self, self.competition.NUMBER_OF_QUESTIONS)
@@ -225,8 +231,10 @@ class Reciver(Toplevel):
 
     def get(self) -> Tuple[str, int, float]:
         """
-        Return values of entryes
-        Reset values of entryes
+        Returns the values from the entries and resets them.
+        
+        Returns:
+        Tuple[str, int, float]: The team name, question number, and answer.
         """
         output = self.team_var.get(), self.question_var.get(), self.answer_var.get()
 
