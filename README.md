@@ -43,7 +43,7 @@ Physicscore uses a JSON file to configure the competitions, teams, parameters, a
 {
     "Name": "Test",
 
-    "Teams": [["Charlie", 100], ["David", 0], ["Eric", 0]],
+    "Teams": [["Charlie", 100], "David", "Eric"],
     "Teams_ghost": ["Ada"],
 
     "Teams_format": ["Name", ["Name", "Handicap as int value"]],
