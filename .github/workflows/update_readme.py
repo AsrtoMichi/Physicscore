@@ -13,7 +13,9 @@ with open(readme_file_path, 'r') as readme_file:
     readme_content = readme_file.read()
 
 # Inserisci il contenuto del file JSON nel README.md
-updated_readme_content = readme_content.replace('<!-- INSERT JSON HERE -->', f'```json\n{json_string}\n```')
+updated_readme_content = readme_content.replace('<!-- INSERT JSON HERE -->', f'```json\n{json_content}\n```')
+
+print(updated_readme_content)
 
 # Scrivi il contenuto aggiornato nel README.md
 with open(readme_file_path, 'w') as readme_file:
