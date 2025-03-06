@@ -1,4 +1,5 @@
 ![324975101-5a9a03e5-f449-4fc1-b5a7-84d55af7ac5b](https://github.com/user-attachments/assets/e43ec1d7-f717-453d-93bb-3fec66910518)
+
 ## README
 
 # Installation
@@ -10,7 +11,7 @@ To install the app:
 
 # Physicscore
 
-Physicscore is an application designed to simulate physics team competitions. This tool is particularly useful for organizing and managing competitions in the style of the Physics Championships. You can find more information about the Physics Championships by visiting their [official website](https://olifis.org/).
+Physicscore is an application designed to simulate physics team competitions. This tool is particularly useful for organizing and managing competitions in the style of the Physics Championships.
 
 ## How to Use
 
@@ -40,58 +41,7 @@ ReportGenerator is a script useful for generating a detailed report about the co
 
 Physicscore uses a JSON file to configure the competitions, teams, parameters, and generate graphs. Below is an example of a configuration JSON file:
 
-```json
-{
-    "Name": "Test",
-
-    "Teams": [["Charlie", 100], "David", "Eric"],
-    "Teams_ghost": ["Ada"],
-
-    "Teams_format": ["Name", ["Name", "Handicap as int value"]],
-
-    "Timers": {
-        "time": 1,
-        "time_for_jolly": 10,
-        "time_format": "use min"
-    },
-    
-    "Parameters": {
-        "Bp": 20,
-        "Dp": 80,
-        "E": 10,
-        "A": 20,
-        "h": 3
-    },
-
-    "Solutions": [
-        [1.0, 1.0],
-        [2.0, 1.0],
-        [3.0, 1.0],
-        [4.0, 1.0]
-    ],
-
-    "Solution_format": ["answer", "relative error"],
-
-    "Actions": {
-        "teams": ["Ada", "Bob"],
-        
-        "jokers": [
-            ["Ada", 1, 10],
-            ["Bob", 2, 30]
-        ],
-
-        "jolly_format": ["team", "question", "time in seconds"],
-
-        "answers": [
-            ["Ada", 1, 1.0, 20],
-            ["Bob", 3, 3.0, 15],
-            ["Ada", 2, 2.0, 40]
-        ],
-
-        "answer_format": ["team", "question", "answer", "time in seconds"]
-    }
-}
-```
+<!-- INSERT JSON HERE -->
 
 ## JSON File Explanation
 
