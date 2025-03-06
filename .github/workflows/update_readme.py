@@ -2,7 +2,7 @@ import json
 import os
 
 json_file_path = '/home/runner/work/Physicscore/Physicscore/Template.json'
-os.path.isfile(json_file_path)
+print(os.path.isfile(json_file_path))
 readme_file_path = '/home/runner/work/Physicscore/Physicscore/README.md'
 
 # Leggi il contenuto del file JSON
