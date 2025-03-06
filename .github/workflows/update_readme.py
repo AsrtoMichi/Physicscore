@@ -5,8 +5,20 @@ import os
 json_file_path = '/home/runner/work/Physicscore/Physicscore/Template.json'
 readme_file_path = '/home/runner/work/Physicscore/Physicscore/README.md'
 
-json_string = json.dumps(json.load(open(json_file_path, 'r')), indent=4)
+# Leggi il contenuto del file JSON
+with open(json_file_path, 'r') as json_file:
+    json_content = json.load(json_file)
 
-updated_readme_content = open(readme_file_path, 'r').read().replace('<!-- INSERT JSON HERE -->', f'```json\n{json_string}\n```')
+# Converti il contenuto del file JSON in una stringa formattata
+json_string = json.dumps(json_content, indent=4)
 
-open(readme_file_path, 'w').write(updated_readme_content)
+# Leggi il contenuto del README.md originale
+with open(readme_file_path, 'r') as readme_file:
+    readme_content = readme_file.read()
+
+# Inserisci il contenuto del file JSON nel README.md
+updated_readme_content = readme_content.replace('<!-- INSERT JSON HERE -->', f'```json\n{json_string}\n```')
+
+# Scrivi il contenuto aggiornato nel README.md
+with open(readme_file_path, 'w') as readme_file:
+    readme_file.write(updated_readme_content)
