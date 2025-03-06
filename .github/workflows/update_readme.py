@@ -11,7 +11,7 @@ def display_tree(startpath):
             print(f'{subindent}{f}')
 
 # Replace 'your_directory_path' with the path of the directory you want to display
-display_tree('/home/runner/work/Physicscore/Physicscore')
+display_tree('/home/runner/work/Physicscore')
 
 json_file_path = '/home/runner/work/Physicscore/Physicscore/Template.json'
 readme_file_path = '/home/runner/work/Physicscore/Physicscore/README.md'
