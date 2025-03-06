@@ -18,6 +18,7 @@ jobs:
         pip install .
     - name: Update README
       run: |
+        echo *
         python .github/workflows/update_readme.py
     - name: Build Documentation
       run: |
