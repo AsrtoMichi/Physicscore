@@ -19,6 +19,9 @@ if __name__ == "__main__":
 
         install_requires=[
             "matplotlib>=3.1.3",
+            "sphinx",
+            "sphinx_rtd_theme",
+            "m2r2"
         ],
         classifiers=[
             "Development Status :: 3 - Alpha",
