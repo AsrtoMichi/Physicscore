@@ -17,8 +17,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
     - name: Update README
-      run: |
-        echo *
+      run: 
         python .github/workflows/update_readme.py
     - name: Build Documentation
       run: |
