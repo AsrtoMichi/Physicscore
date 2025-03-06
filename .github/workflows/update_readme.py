@@ -6,10 +6,7 @@ readme_file_path = '/home/runner/work/Physicscore/Physicscore/README.md'
 
 # Leggi il contenuto del file JSON
 with open(json_file_path, 'r') as json_file:
-    json_content = json.load(json_file)
-
-# Converti il contenuto del file JSON in una stringa formattata
-json_string = json.dumps(json_content, indent=4)
+    json_content = json_file.read()
 
 # Leggi il contenuto del README.md originale
 with open(readme_file_path, 'r') as readme_file:
