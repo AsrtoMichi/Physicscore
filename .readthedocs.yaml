@@ -1,0 +1,27 @@
+# .readthedocs.yaml
+# Questo file configura le impostazioni per Read the Docs
+
+version: 2
+
+# Configurazione di base
+build:
+  os: 
+    - ubuntu-22.04
+    - windows-2022
+    - debian-11
+  tools:
+    python: "3.11"
+
+# Configurazione dell'ambiente
+python:
+  install:
+    - method: pip
+      path: .
+    - requirements: docs/requirements.txt
+
+# Comandi build
+sphinx:
+  configuration: docs/conf.py
+
+# Opzioni
+formats: all
