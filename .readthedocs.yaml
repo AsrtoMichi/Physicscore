@@ -5,8 +5,7 @@ version: 2
 
 # Configurazione di base
 build:
-  os: 
-    - debian-11
+  os: ubuntu-22.04
   tools:
     python: "3.11"
 
