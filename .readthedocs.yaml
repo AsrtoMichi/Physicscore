@@ -6,8 +6,6 @@ version: 2
 # Configurazione di base
 build:
   os: 
-    - ubuntu-22.04
-    - windows-2022
     - debian-11
   tools:
     python: "3.11"
