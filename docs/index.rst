@@ -6,6 +6,9 @@
 Welcome to Physicscore's documentation!
 =======================================
 
+.. include:: README.md
+   :parser: myst_parser
+
 Contents:
 
 .. toctree::
