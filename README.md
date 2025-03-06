@@ -1,5 +1,4 @@
 ![324975101-5a9a03e5-f449-4fc1-b5a7-84d55af7ac5b](https://github.com/user-attachments/assets/e43ec1d7-f717-453d-93bb-3fec66910518)
-
 ## README
 
 # Installation
@@ -11,7 +10,7 @@ To install the app:
 
 # Physicscore
 
-Physicscore is an application designed to simulate physics team competitions. This tool is particularly useful for organizing and managing competitions in the style of the Physics Championships.
+Physicscore is an application designed to simulate physics team competitions. This tool is particularly useful for organizing and managing competitions in the style of the Physics Championships. You can find more information about the Physics Championships by visiting their [official website](https://olifis.org/).
 
 ## How to Use
 
@@ -41,7 +40,9 @@ ReportGenerator is a script useful for generating a detailed report about the co
 
 Physicscore uses a JSON file to configure the competitions, teams, parameters, and generate graphs. Below is an example of a configuration JSON file:
 
+```json
 <!-- INSERT JSON HERE -->
+```
 
 ## JSON File Explanation
 
