@@ -40,9 +40,7 @@ ReportGenerator is a script useful for generating a detailed report about the co
 
 Physicscore uses a JSON file to configure the competitions, teams, parameters, and generate graphs. Below is an example of a configuration JSON file:
 
-```json
 <!-- INSERT JSON HERE -->
-```
 
 ## JSON File Explanation
 
