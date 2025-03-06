@@ -24,12 +24,20 @@ release = '0.1.0'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'm2r2',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
+# The master toctree document.
+master_doc = 'index'
+
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+# -- Options for source parsers ----------------------------------------------
+
+source_suffix = ['.rst', '.md']
