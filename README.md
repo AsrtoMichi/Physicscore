@@ -3,10 +3,13 @@
 
 # Installation
 
-To install the app:
+To install the app from github:
 1. Clone the source code using git: ```git clone AsrtoMichi/Physicscore```
 2. Navigate to the directory: ```cd Physicscore```
 3. Install the package using: ```pip install .```
+
+To install the app using pip:
+1. ```pip install Physicscore```
 
 # Physicscore
 
