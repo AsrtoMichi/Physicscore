@@ -4,7 +4,7 @@ from os.path import join, dirname
 if __name__ == "__main__":
     setup(
         name="Physicscore",
-        version="0.2.0.0",
+        version="0.2.0.1",
         author="AsrtoMichi",
         author_email="asrtomichi@gmail.com",
         maintainer="AsrtoMichi",
