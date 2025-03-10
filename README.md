@@ -1,4 +1,5 @@
-![324975101-5a9a03e5-f449-4fc1-b5a7-84d55af7ac5b](https://github.com/user-attachments/assets/e43ec1d7-f717-453d-93bb-3fec66910518)
+![Physicscore](https://github.com/user-attachments/assets/1a4b79ad-3c2b-4559-bac4-e17477c4b682)
+
 ## README
 
 # Installation
