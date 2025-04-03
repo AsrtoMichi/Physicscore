@@ -1,5 +1,6 @@
 from math import e, sqrt
-from typing import Tuple
+from typing import Tuple, Iterable
+from tkinter.messagebox import showerror
 
 class Competition:
     """
@@ -20,10 +21,11 @@ class Competition:
         data (dict): Dictionary containing competition data and solutions.
         teams (Tuple[str | Tuple[str, int]]): Tuple of team names or tuples of team names with handicaps.
         """
-        def unpack_team_nh(data) -> Tuple[str, int]:
+        
+        def unpack_data(data: str | Tuple[str, int]) -> Tuple[str, int]:
             """
             Unpacks team name and handicap.
-            
+
             Parameters:
             data: str or Tuple[str, int]
                 Team data which can be a string (team name) or a tuple (team name, handicap).
@@ -31,41 +33,87 @@ class Competition:
             Returns:
             Tuple[str, int]: Unpacked team name and handicap.
             """
-            return (data, 0) if isinstance(data, str) else data
 
-        self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = tuple(unpack_team_nh(team_nh)[0] for team_nh in teams), len(teams)
-        self.questions_data = {
-            question: {
-                'min': 1 / (1 + question_data[1] / 100),
-                'avg': question_data[0],
-                'max': 1 + question_data[1] / 100,
-                'ca': 0,
-            }
-            for question, question_data in enumerate(data['Solutions'], 1)
-        }
-        self.fulled = 0
+            if isinstance(data, str):
+                return (data, 0)
+            elif isinstance(data, Iterable) and len(data) == 2 and isinstance(data[0], str) and isinstance(data[1], int):
+                return data
+            else:
+                showerror("Invalid Teams Format", f"The team's data: '{data}' is in an invalid format.", detail="Error code: 221")
+                raise RuntimeError
 
-        self.NUMBER_OF_QUESTIONS = len(self.questions_data)
-        self.NUMBER_OF_QUESTIONS_RANGE_1 = range(1, self.NUMBER_OF_QUESTIONS + 1)
-        
-        self.Bp: int = data['Patameters']['Bp']
-        self.Dp: int = data['Patameters']['Dp']
-        self.E: int = data['Patameters']['E']
-        self.A: int = data['Patameters']['A']
-        self.h: int = data['Patameters']['h']
-        
-        self.teams_data = {
-            unpack_team_nh(team_nh)[0]: {
-                'bonus': unpack_team_nh(team_nh)[1],
-                'jolly': None,
-                'active': False,
-                **{
-                    question: {'err': 0, 'sts': False, 'bonus': 0}
-                    for question in self.NUMBER_OF_QUESTIONS_RANGE_1
-                },
+
+        def delete_duplicate(data: Tuple[str | Tuple[str, int]]) -> Tuple[Tuple[str, int]]:
+            """
+            Removes duplicate team names and ensures consistent handicap values.
+
+            Parameters:
+            data: Tuple[str | Tuple[str, int]]
+                List of team data, which can contain both strings and tuples.
+
+            Returns:
+            Tuple[Tuple[str, int]]: Cleaned list of unique team names with consistent handicap values.
+            """
+
+            result = []
+
+            for team, handicap in map(unpack_data, data):
+                if any(sublist[0] == team for sublist in result):
+                    if any(sublist[1] != handicap for sublist in result if sublist[0] == team):
+                        showerror("Bad Duplicated Teams", f"The team '{team}' appears twice with different handicaps.", detail="Error code: 222")
+                        raise RuntimeWarning 
+                else:
+                    result.append((team, handicap))
+
+            return result
+
+
+        teams = delete_duplicate(teams)
+        self.NAMES_TEAMS, self._NUMBER_OF_TEAMS = tuple([team[0] for team in teams]), len(teams)
+        if self._NUMBER_OF_TEAMS == 0:
+            showerror("Insufficient Teams", "There are no teams.", detail="Error code: 223")
+            raise RuntimeWarning
+            
+        try:
+            self.questions_data = {
+                question: {
+                    'min': 1 / (1 + question_data[1] / 100),
+                    'avg': question_data[0],
+                    'max': 1 + question_data[1] / 100,
+                    'ca': 0,
+                }
+                for question, question_data in enumerate(data['Solutions'], 1)
             }
-            for team_nh in teams
-        }
+            self.fulled = 0
+
+            self.NUMBER_OF_QUESTIONS = len(self.questions_data)
+            self.NUMBER_OF_QUESTIONS_RANGE_1 = range(1, self.NUMBER_OF_QUESTIONS + 1)
+            
+            self.Bp: int = data['Parameters']['Bp']
+            self.Dp: int = data['Parameters']['Dp']
+            self.E: int = data['Parameters']['E']
+            self.A: int = data['Parameters']['A']
+            self.h: int = data['Parameters']['h']
+            
+            self.teams_data = {
+                team[0]: {
+                    'bonus': team[1],
+                    'jolly': None,
+                    'active': False,
+                    **{
+                        question: {'err': 0, 'sts': False, 'bonus': 0}
+                        for question in self.NUMBER_OF_QUESTIONS_RANGE_1
+                    },
+                }
+                for team in teams
+            }
+            
+        except KeyError as e:
+            showerror("Missign Data", "Some data are missing in the JSON", detail=f"{e}{chr(10)}Error code: 224")
+            raise RuntimeWarning
+        except ValueError as e:
+            showerror("Bad Data", "Some data are invalid", detail=f"{e}{chr(10)}Error code: 225")
+            raise RuntimeWarning            
 
     def submit_answer(self, team: str, question: int, answer: float) -> bool:
         """

@@ -1,6 +1,7 @@
 from json import dump
 from tkinter.filedialog import asksaveasfilename
 from tkinter import Tk, Toplevel, Entry, Frame, Label, OptionMenu, Button
+from tkinter.messagebox import showerror
 from typing import Tuple
 from .Var import IntVar, DoubleVar, Variable
 from .Competition import Competition
@@ -24,62 +25,74 @@ class CompetitionFrame(Frame):
         data (dict): Dictionary containing competition data.
         """
         super().__init__(master)
-        master.title(data['Name'])
+        
+        try:
+            master.title(data['Name'])
 
-        self.data = data
-        self.competition = Competition(data, data['Teams'] + data['Teams_ghost'])
-        self._jolly, self._answer = [], []
+            self.data = data
+            self.competition = Competition(data, data['Teams'] + data['Teams_ghost'])
+            self._jolly, self._answer = [], []
 
-        self.timer: int = data['Timers']['time'] * 60
-        self.timer_label = Label(
-            self,
-            font=('Helvetica', 18, 'bold'),
-            text=f'Time left: {self.timer // 3600:02d}:{(self.timer % 3600) // 60:02d}:00',
-        )
-        self.timer_label.pack()
+            self.timer: int = data['Timers']['time'] * 60
+            self.timer_label = Label(
+                self,
+                font=('Helvetica', 18, 'bold'),
+                text=f'Time left: {self.timer // 3600:02d}:{(self.timer % 3600) // 60:02d}:00',
+            )
+            self.timer_label.pack()
 
-        self.points_scroll_frame = PointsScrollFrame(self, self.competition)
-        self.points_scroll_frame.pack(fill='both', expand=True)
-        self.points_scroll_frame.update_entry()
+            self.points_scroll_frame = PointsScrollFrame(self, self.competition)
+            self.points_scroll_frame.pack(fill='both', expand=True)
+            self.points_scroll_frame.update_entry()
 
-        self.reciver = Reciver(self)
-        self.reciver.jolly_button.configure(state='normal')
-        self.reciver.answer_button.configure(state='normal')
-        self.reciver.bind('<Return>', lambda key: self.submit_answer())
-        self.reciver.bind('<Shift-Return>', lambda key: self.submit_jolly())
+            self.reciver = Reciver(self)
+            self.reciver.jolly_button.configure(state='normal')
+            self.reciver.answer_button.configure(state='normal')
+            self.reciver.bind('<Return>', lambda key: self.submit_answer())
+            self.reciver.bind('<Shift-Return>', lambda key: self.submit_jolly())
 
-        TOTAL_TIME = self.timer
+            TOTAL_TIME = self.timer
 
-        # Timer
-        for time in range(1000, (TOTAL_TIME * 1000) + 1, 1000):
-            master.after(time, self.update_timer)
+            # Timer
+            for time in range(1000, (TOTAL_TIME * 1000) + 1, 1000):
+                master.after(time, self.update_timer)
 
-        # Answers
-        for answer in data['Actions']['answers']:
-            if answer[0] in data['Teams_ghost']:
-                master.after(answer[3] * 1000, self.competition.submit_answer, *answer[:3])
-                master.after(answer[3] * 1000 + 100, self.points_scroll_frame.update_entry)
+            # Answers
+            for answer in data['Actions']['answers']:
+                if answer[0] in data['Teams_ghost']:
+                    master.after(answer[3] * 1000, self.competition.submit_answer, *answer[:3])
+                    master.after(answer[3] * 1000 + 100, self.points_scroll_frame.update_entry)
 
-        # Jolly
-        for jolly in data['Actions']['jokers']:
-            if jolly[0] in data['Teams_ghost']:
-                master.after(jolly[2] * 1000, self.competition.submit_jolly, *jolly[:2])
-                master.after(jolly[2] * 1000 + 100, self.points_scroll_frame.update_entry)
+            # Jolly
+            for jolly in data['Actions']['jokers']:
+                if jolly[0] in data['Teams_ghost']:
+                    master.after(jolly[2] * 1000, self.competition.submit_jolly, *jolly[:2])
+                    master.after(jolly[2] * 1000 + 100, self.points_scroll_frame.update_entry)
+                    
+            def stop_jolly():
+                """
+                Blocks the ability to submit jolly.
+                """
+                self.reciver.jolly_button.destroy()
+                self.reciver.unbind('<Shift-Return>')
 
-        def stop_jolly():
-            """
-            Blocks the ability to submit jolly.
-            """
-            self.reciver.jolly_button.destroy()
-            self.reciver.unbind('<Shift-Return>')
+            master.after(data['Timers']['time_for_jolly'] * 60000, stop_jolly)
 
-        master.after(data['Timers']['time_for_jolly'] * 60000, stop_jolly)
+            # Hiding points
+            master.after((TOTAL_TIME - 30) * 1000, self.points_scroll_frame.pack_forget)
 
-        # Hiding points
-        master.after((TOTAL_TIME - 30) * 1000, self.points_scroll_frame.pack_forget)
+            # Conclusion
+            master.after(TOTAL_TIME * 1000, self.hide_ranking)
+                       
+        except KeyError as e:
+            showerror("Missign Data", "Some data are missing in the JSON", detail=f"{e}{chr(10)}Error code: 224", master=master)
+            raise RuntimeWarning
+        except (ValueError, TypeError) as e:
+            showerror("Bad Data", "Some data are invalid", detail=f"{e}{chr(10)}Error code: 225", master=master)
+            raise RuntimeWarning 
 
-        # Conclusion
-        master.after(TOTAL_TIME * 1000, self.hide_ranking)
+
+
 
     def hide_ranking(self):
         """
@@ -111,12 +124,12 @@ class CompetitionFrame(Frame):
                         'time_for_jolly': self.data['Timers']['time_for_jolly'],
                         'time_format': 'use min',
                     },
-                    'Patameters': {
-                        'Bp': self.data['Patameters']['Bp'],
-                        'Dp': self.data['Patameters']['Dp'],
-                        'E': self.data['Patameters']['E'],
-                        'A': self.data['Patameters']['A'],
-                        'h': self.data['Patameters']['h'],
+                    'Parameters': {
+                        'Bp': self.data['Parameters']['Bp'],
+                        'Dp': self.data['Parameters']['Dp'],
+                        'E': self.data['Parameters']['E'],
+                        'A': self.data['Parameters']['A'],
+                        'h': self.data['Parameters']['h'],
                     },
                     'Solutions': self.data['Solutions'],
                     'Actions': {

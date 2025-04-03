@@ -23,33 +23,41 @@ class GraphsFrame(Frame):
         data (dict): Dictionary containing competition data.
         """
         super().__init__(master)
+        
+        try:
+            master.title(data['Name'])
+            competition = Competition(data, data['Actions']['teams'])
+            TOTAL_TIME = data['Timers']['time'] * 60
 
-        master.title(data['Name'])
+            data_teams = {team: [] for team in competition.NAMES_TEAMS}
+            data_question = {question: [] for question in competition.NUMBER_OF_QUESTIONS_RANGE_1}
 
-        competition = Competition(data, data['Actions']['teams'])
+            def register_data():
+                """
+                Registers the data points for teams and questions.
+                """
+                for team in competition.NAMES_TEAMS:
+                    data_teams[team].append((timer, competition.total_points_team(team)))
 
-        TOTAL_TIME = data['Timers']['time'] * 60
+                for question in competition.NUMBER_OF_QUESTIONS_RANGE_1:
+                    data_question[question].append((timer, competition.value_question(question)))
 
-        data_teams = {team: [] for team in competition.NAMES_TEAMS}
-        data_question = {question: [] for question in competition.NUMBER_OF_QUESTIONS_RANGE_1}
-
-        def register_data():
-            """
-            Registers the data points for teams and questions.
-            """
-            for team in competition.NAMES_TEAMS:
-                data_teams[team].append((timer, competition.total_points_team(team)))
-
-            for question in competition.NUMBER_OF_QUESTIONS_RANGE_1:
-                data_question[question].append((timer, competition.value_question(question)))
-
-        timer = TOTAL_TIME
-        register_data()
-
-        for action in sorted(data['Actions']['answers'] + data['Actions']['jokers'], key=lambda x: x[-1], reverse=True):
-            timer = action[-1]
-            competition.submit_jolly(*action[:2]) if len(action) == 3 else competition.submit_answer(*action[:3])
+            timer = TOTAL_TIME
             register_data()
+
+            for action in sorted(data['Actions']['answers'] + data['Actions']['jokers'], key=lambda x: x[-1], reverse=True):
+                timer = action[-1]
+                competition.submit_jolly(*action[:2]) if len(action) == 3 else competition.submit_answer(*action[:3])
+                register_data()
+            
+            
+        except KeyError as e:
+            showerror("Missign Data", "Some data are missing in the JSON", detail=f"{e}{chr(10)}Error code: 224", master=master)
+            raise RuntimeWarning
+        except (ValueError, TypeError) as e:
+            showerror("Bad Data", "Some data are invalid", detail=f"{e}{chr(10)}Error code: 225", master=master)
+            raise RuntimeWarning 
+
 
         timer = 0
         register_data()

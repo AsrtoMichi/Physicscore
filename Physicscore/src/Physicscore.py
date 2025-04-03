@@ -85,7 +85,7 @@ Contact me by email at a asrtomichi@gmail.com.""",
             self.data = json_load(self)
             self.button1.config(text="Start", command=self.start_competition)
             self.button2.pack_forget()
-        except (FileNotFoundError, TypeError):
+        except RuntimeWarning:
             self.show_menu()
 
     def start_competition(self):
@@ -93,8 +93,11 @@ Contact me by email at a asrtomichi@gmail.com.""",
         Starts the competition with the loaded data.
         """
         self.button1.pack_forget()
-        self.frame = CompetitionFrame(self, self.data)
-        self.frame.pack(fill='both', expand=True)
+        try:
+            self.frame = CompetitionFrame(self, self.data)
+            self.frame.pack(fill='both', expand=True)
+        except RuntimeWarning:
+            self.show_menu()
         del self.data
 
     def show_graph(self):
@@ -106,5 +109,5 @@ Contact me by email at a asrtomichi@gmail.com.""",
             self.button2.pack_forget()
             self.frame = GraphsFrame(self, json_load(self))
             self.frame.pack()
-        except (FileNotFoundError, TypeError):
+        except RuntimeWarning:
             self.show_menu()
