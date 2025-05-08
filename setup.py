@@ -30,8 +30,8 @@ if __name__ == "__main__":
         ],
         entry_points={
             "console_scripts": [
-                "physicscore=src.physicscore:main",
-                "reportgen=src.reportgen:main",
+                "physicscore=src:run_physicscore",
+                "reportgen=src:generate_report",
             ],
         },
         package_data={
