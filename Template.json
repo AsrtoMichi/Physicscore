@@ -14,7 +14,7 @@
 		"time_format": "use min"
 	},
 	
-	"Patameters": {
+	"Parameters": {
 		"Bp" : 20,
 		"Dp" : 80,
 		"E" : 10,
