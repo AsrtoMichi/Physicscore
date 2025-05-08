@@ -26,7 +26,7 @@ if __name__ == "__main__":
             "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
             "Programming Language :: Python :: 3.11",
             "Operating System :: OS Independent",
-            "Topic :: Education :: Physics",
+            "Topic :: Education",
         ],
         entry_points={
             "console_scripts": [
