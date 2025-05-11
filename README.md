@@ -29,6 +29,34 @@ Physicscore is an application designed to simulate physics team competitions. Th
 - **Enter**: To submit an answer.
 - **Shift + Enter**: To use a joker.
 
+## Errors
+ - 1
+   Softwer bug, report at https://github.com/AsrtoMichi/Physicscore/issues
+ - 2
+   User Errors
+    - 21
+      JSON Parsing Issues
+        - 211
+          Parsing JSON
+        - 212
+          File Not Found
+        - 213
+          Permission Error
+        - 214
+          JSON Decode Error
+    - 22
+      Competiotion Creation
+        - 221
+          Invalid Teams Format
+        - 222
+          Bad Duplicated Teams
+        - 223
+          Insufficient Teams
+        - 224
+          Missign Data
+        - 225
+          Bad Data
+
 # Graph Generation
 
 ReportGenerator is a script useful for generating a detailed report about the competition.
