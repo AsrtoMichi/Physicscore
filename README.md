@@ -1,13 +1,8 @@
-![Physicscore](https://github.com/user-attachments/assets/1a4b79ad-3c2b-4559-bac4-e17477c4b682)
-
-## README
+### README
 
 # Installation
 
-To install the app using pip:
-1. ```pip install Physicscore```
-
-To install the app from github:
+To install the app:
 1. Clone the source code using git: ```git clone AsrtoMichi/Physicscore```
 2. Navigate to the directory: ```cd Physicscore```
 3. Install the package using: ```pip install .```

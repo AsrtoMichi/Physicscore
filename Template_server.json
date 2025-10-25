@@ -4,7 +4,11 @@
 
 	"Name" : "Test",
 
-	"Teams": ["Charlie", "David", "Eric", ["1", 100], "2", "3"],
+	"Teams": {
+        "reciver_1" : ["Charlie", "David"],
+        "reciver_2" : ["Eric"]
+    },
+
 	"Teams_ghost" : ["Ada"],
 	"Teams_format": ["Name", ["Name", "Handicap as int value"]],
 
