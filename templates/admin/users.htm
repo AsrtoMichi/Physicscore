@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin - Users</title>
+  <style>
+    table {border-collapse: collapse; width: 100%}
+    th, td {border: 1px solid #ddd; padding: 8px}
+    th {background: #f4f4f4}
+    .suspended {background: #fee}
+    form {display: inline}
+    button {padding: 6px 10px; margin: 0 4px}
+  </style>
+</head>
+<body>
+  <h1>Lista utenti</h1>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+  <table>
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr class="{{ 'suspended' if u.status == 'suspended' else '' }}">
+        <td>{{ u.email }}</td>
+        <td>{{ u.role }}</td>
+        <td>{{ u.status }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin_resend_token', user_id=u.id) }}">
+            <button type="submit">Reinvia token</button>
+          </form>
+          {% if u.status != 'suspended' %}
+          <form method="post" action="{{ url_for('admin_suspend_user', user_id=u.id) }}">
+            <button type="submit">Sospendi</button>
+          </form>
+          {% else %}
+          <form method="post" action="{{ url_for('admin_reinstate_user', user_id=u.id) }}">
+            <button type="submit">Riammetti</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
+"""
